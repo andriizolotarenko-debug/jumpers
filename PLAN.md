@@ -28,15 +28,18 @@ pastes the output.
    `.luacheckrc`, busted setup, CI workflow (lint + tests).
 2. **Streak engine + Tiers + Units + Stats.** Pure modules with full specs.
 3. **Detector.** Jump hook, filters, takeoff confirm, movement and turning.
-4. **Counter UI.**
-   - Pop-in, tier font tints, snap-out.
-   - Scale growth.
-   - 4 effect layers and tier sounds.
-5. **Stats window.**
-   - Totals, best streak, number of streaks.
-   - Height in m / ft / floors.
-   - Landmarks and progress to the next one.
-6. **Settings.** Unit override, counter lock/reset position, sound on/off.
+4. **Art.** Textures for the ribbon, trim, glyph and effects (TGA), plus the font with
+   its licence, per [UI-SPEC.md](UI-SPEC.md).
+5. **Counter UI.**
+   - Assembly x1–x20, tier colours, lettering, growth, window fade, end behaviour.
+   - Trim bursts and 4 effect layers.
+   - NEW BEST plaque, milestone caption, sounds.
+6. **Main window.**
+   - Portrait frame with three tabs.
+   - Personal Stats: height progress, today / all-time totals, period bests, milestone list.
+   - Leaderboard notice.
+   - Settings tab with live preview; Options → AddOns stub.
+   - Minimap button (LibDataBroker + LibDBIcon via `.pkgmeta`).
 7. **Release pipeline.**
    - `.pkgmeta` and release workflow on tag.
    - CurseForge project id and `CF_API_KEY` secret (Andrii creates the project).
@@ -51,8 +54,11 @@ pastes the output.
       between jumps does count.
 - [ ] Jumps are not counted while swimming, flying, on a flight path or stunned. They
       are counted mounted and on ships, zeppelins and the tram.
-- [ ] Tier looks change at x5 / x10, effects appear at x25 / x50 / x100 / x200, the
-      counter grows from x100.
+- [ ] The ribbon assembles over x1–x20 (trims snap on at x10 / x20), colours and
+      effects arrive at x25 / x50 / x100 / x200, the counter grows +0.1% per jump.
+- [ ] Without jumps the ribbon fades by 3 s; the end is a snap above x10, a fade below.
+- [ ] A record above x10 ends with NEW BEST!; passing a landmark shows its caption.
+- [ ] The window opens from the minimap button and `/jumpers`; all settings apply live.
 - [ ] Stats survive `/reload` and relog. Units default by region and can be switched in
       settings.
 - [ ] No Lua errors (`/console scriptErrors 1`), including inside a dungeon.

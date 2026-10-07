@@ -12,8 +12,11 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). `Rx.y` references point there.
 - **Small, owned art.** The counter ships its own textures (TGA, drawn in greys and
   tinted in game) and one OFL font, so the game matches the approved design
   ([UI-SPEC.md](UI-SPEC.md)). Sounds come from the game's built-in sound kits.
-- **No libraries in v1.** Libraries arrive in v2 with networking (AceComm,
-  LibSerialize, LibDeflate via `.pkgmeta` externals).
+- **Few libraries.**
+  - v1 uses only LibDataBroker-1.1 and LibDBIcon-1.0 (with LibStub and
+    CallbackHandler) for the minimap button (R6.2).
+  - v2 adds AceComm, LibSerialize and LibDeflate for networking.
+  - All of them come in through `.pkgmeta` externals and are never committed.
 - **Fail safe.** Any API that returns nothing (facing in instances, region, calendar)
   degrades to "don't count" or a default. It never errors and never counts by mistake.
 
@@ -25,18 +28,24 @@ src/
   Core.lua          namespace, init, SavedVariables load + schema migration, slash cmd
   Detector.lua      ADAPTER: jump hook, takeoff confirm, context filters, movement
   Streak.lua        PURE: 3 s window state machine → emits jump / streak-end
-  Tiers.lua         PURE: n → { colour, effects[], scale }
-  Stats.lua         PURE: totals, best, count, per-day bests (realm day)
-  Units.lua         PURE: jumps → m / ft / floors; landmark progress
-  Landmarks.lua     DATA: buildings, mountains, space distances
-  ui/Counter.lua    combo counter frame, tier looks, pop-in / snap-out animations
-  ui/Effects.lua    4 stacking effect layers (x25 / x50 / x100 / x200)
-  ui/StatsWindow.lua  personal stats + fun metrics (v2: Leaderboard tab)
-  Settings.lua      options panel: units, counter position lock/reset, sound on/off
+  Tiers.lua         PURE: n → look (colours, part alphas, trims, lettering, effects, scale)
+  Stats.lua         PURE: today / all-time counts, per-day bests (realm day), period bests, NEW BEST check
+  Units.lua         PURE: jumps → m / ft / floors; milestone index, progress, crossings
+  Landmarks.lua     DATA: the 58 milestones (UI-SPEC)
+  Settings.lua      settings store + defaults; Options → AddOns stub that opens the window
+  ui/Counter.lua    combo counter frame, assembly, tier looks, window fade, snap-out, NEW BEST plaque
+  ui/Effects.lua    4 stacking effect layers (x25 / x50 / x100 / x200) + trim spark bursts
+  ui/Caption.lua    milestone caption above the counter
+  ui/Window.lua     portrait frame with three tabs
+  ui/StatsTab.lua   Personal Stats tab
+  ui/BoardTab.lua   Leaderboard tab (v1: "coming in v2" notice)
+  ui/SettingsTab.lua  settings controls + live counter preview
+  ui/Minimap.lua    LibDataBroker launcher + LibDBIcon button
   -- v2 --
   net/Comm.lua      ADAPTER: addon messages, channel join, throttling
   net/Board.lua     PURE: record store, timeframes, quorum, online set
   net/Verify.lua    PURE: plausibility checks
+libs/               fetched by the packager from .pkgmeta externals (gitignored)
 media/              counter textures (TGA) + ChangaOne-Italic.ttf + OFL.txt
 spec/               busted tests for every PURE module
 ```
@@ -122,9 +131,14 @@ Exact look and timings: [UI-SPEC.md](UI-SPEC.md).
 
 - `JumpersDB` (account-wide) and `JumpersCharDB` (per character), with
   `schemaVersion` and migrations in `Core`.
-- Stats keep totals, best streak and streak count, plus **one best-streak entry per
-  realm day**, capped at 366 days. Every timeframe (today / 7 / 30 / 365) is derived from
-  that list, so storage stays small and bounded.
+- Stats keep all-time jumps, streaks and best streak, plus **one entry per realm day**:
+  that day's jumps, streaks and best streak. Day entries are capped at 366.
+  - "Today" and every period best (today / 7 / 30 / 365 days) come from the day entries.
+  - "All time" keeps its own counters.
+  - Floors and height are derived from jumps, never stored.
+- The milestone caption follows the character's height. `Units` returns which
+  landmarks a new jump crosses.
+- Settings live in `JumpersDB.settings` (account-wide), with the defaults from R6.3.
 - Realm day comes from `C_DateAndTime.GetCurrentCalendarTime()`, which uses realm time
   (R4.2).
 
@@ -170,6 +184,6 @@ Exact look and timings: [UI-SPEC.md](UI-SPEC.md).
 
 - **Packaging.** `.pkgmeta` + BigWigs packager in GitHub Actions on a `v*` tag. It
   uploads to CurseForge (`CF_API_KEY` repo secret + `## X-Curse-Project-ID` in the TOC)
-  and attaches the zip to a GitHub Release (R6).
+  and attaches the zip to a GitHub Release (R7).
 - **TOC `## Interface`.** Read it from the Forever client with
   `/dump select(4, GetBuildInfo())`.

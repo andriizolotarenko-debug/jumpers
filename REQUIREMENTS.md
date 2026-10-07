@@ -78,25 +78,37 @@ The approved visual design, with exact values, is in [UI-SPEC.md](UI-SPEC.md).
   genuinely big.
 - **R2.8** Each tier change plays a short animation and sound. The assembly milestones
   x5, x10 and x20 get a lighter version.
+- **R2.9** **NEW BEST!** When a streak above x10 ends as the player's new best:
+  - The ribbon comes back to full.
+  - A gold "NEW BEST!" plaque pops above it, with sparks and a fanfare.
+  - "previous xN" shows under it.
+  - After 1.8 s the counter snaps out as usual.
+- **R2.10** **Milestone caption.** When the character's total height passes a landmark
+  (R3.3), a caption appears above the counter for about 3 s:
+  "You climbed / Mount Hoverla • 2,061 m". The streak is not interrupted.
 
 ## 3. Personal statistics
 
 - **R3.1** Tracked per character and per account:
-  - total counted jumps
-  - best streak
-  - number of streaks
+  - jumps, floors and streaks, both **today** and **all time**
+  - best streak for today, 7 days, 30 days, the last year and all time
 - **R3.2** The streak counter and leaderboard use **jumps**. Personal stats also
   translate jumps into **height climbed**, as if every jump were a step up.
   - Height per jump: ~1.64 yd ≈ **1.50 m ≈ 4.92 ft**, derived from WoW jump physics.
     Must be calibrated in-game.
-  - Units: metres, feet, floors. Default: **feet in the US region, metres elsewhere**.
+  - Units: **metres or feet** only. Default: feet in the US region, metres elsewhere.
     The player can switch.
-  - Floor height: 3 m in metres mode, 10 ft in feet mode.
-- **R3.3** Fun comparisons of the height climbed:
-  - **Buildings:** Eiffel Tower, Empire State Building, Burj Khalifa…
-  - **Mountains:** Hoverla, Mont Blanc, Everest…
-  - **Space:** Kármán line, ISS orbit, Earth→Moon, Earth→Mars…
-  - Shown as "climbed N× Eiffel Tower" or as progress toward the next landmark.
+  - Floors are a fun unit inside the stats: 3 m per floor in metres mode, 10 ft in feet
+    mode.
+- **R3.3** **Milestones.** There are 58 landmarks, from a WoW zeppelin tower (20 m) to
+  the distance around the Sun:
+  - Each landmark is roughly 10–50% above the previous one.
+  - The list moves through WoW and real buildings, then mountains, the sky, orbits and
+    space objects.
+  - The stats show a progress bar from the last landmark passed to the next one, plus
+    the full list.
+  - The list and values are in [UI-SPEC.md](UI-SPEC.md). Heights of WoW structures are
+    estimates and must be measured in game.
 
 ## 4. Leaderboard
 
@@ -140,10 +152,33 @@ peer-to-peer over addon messages.
   produce fake or farmed streaks. Without a server this cannot be fully prevented. The
   checks above aim to raise the cost of cheating, not to make it impossible.
 
-## 6. Distribution
+## 6. Window, settings, minimap
 
-- **R6.1** CurseForge project page and zip downloads on GitHub Releases.
-- **R6.2** Automated packaging and upload on git tag (GitHub Actions + BigWigs packager).
+- **R6.1** One addon window with three tabs:
+  - **Personal Stats**
+  - **Leaderboard** (v1 shows a "coming in v2" notice)
+  - **Settings**
+- **R6.2** The window opens from a **minimap button** (the player can hide it) or with
+  `/jumpers`. Options → AddOns → Jumpers only holds a button that opens the window.
+- **R6.3** Settings and their defaults:
+
+  | Setting | Default |
+  |---|---|
+  | Show combo counter | on |
+  | Counter size, 50–200% | 100% |
+  | Unlock position + reset | locked |
+  | Reduced effects | off |
+  | Sound volume, 0–100% | 0% (off) |
+  | Height units: metres / feet | by region |
+  | Minimap button | shown |
+
+  A live counter preview sits next to the size setting.
+- **R6.4** v1 is English only. No stats reset in v1.
+
+## 7. Distribution
+
+- **R7.1** CurseForge project page and zip downloads on GitHub Releases.
+- **R7.2** Automated packaging and upload on git tag (GitHub Actions + BigWigs packager).
 
 ---
 

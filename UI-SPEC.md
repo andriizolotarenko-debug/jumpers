@@ -1,7 +1,8 @@
-# Jumpers — Combo Counter UI Spec
+# Jumpers — UI Spec
 
-Approved design of the streak counter (R2). It is the contract for `ui/Counter.lua` and
-`ui/Effects.lua`. Sizes are UI pixels at scale 1. Times are seconds.
+Approved design of the combo counter (R2), the NEW BEST and milestone moments, the main
+window (R6) and the milestone list (R3.3). It is the contract for the `ui/` modules.
+Sizes are UI pixels at scale 1. Times are seconds.
 
 ## Anatomy
 
@@ -134,3 +135,113 @@ implementation for:
 - the milestone
 - the tier-up
 - the snap-out
+
+## NEW BEST! (R2.9)
+
+- **Trigger:** a streak above x10 ends and beats the stored best.
+- **Sequence (1.8 s hold, then the usual 0.12 s snap-out):**
+  - The ribbon and effects return to full alpha within ~0.1 s.
+  - The counter pops (amplitude 0.4, 0.3 s).
+  - The middle trim flashes and bursts gold sparks.
+  - Fanfare sound.
+- **Plaque:**
+  - "NEW BEST!" in Changa One Italic 17 px, centred 17 px above the ribbon top.
+  - Gold face `#ffd76a`, with 3 extrusion layers in dark gold and a 35% drop layer.
+  - Pops in with an overshoot over 0.28 s.
+  - A soft additive gold glow pulses behind it.
+  - Six twinkling 4-point stars around it.
+- **Under the ribbon:**
+  - "previous xN" in the game font, bold 18 px, with a dark outline.
+  - It fades in after 0.2 s.
+  - It is hidden when there was no previous best.
+
+## Milestone caption (R2.10)
+
+- **Trigger:** the character's total height (jumps × 1.5 m) passes the next landmark.
+  If several are passed at once, only the last one is shown.
+- **Placement:** centred above the counter, `26 × scale + 46` px above the counter's
+  anchor.
+- **Content, two lines in the game font with a dark outline:**
+  - "You climbed", 14 px, gold `#f2c75c`
+  - `<name> • <height>`, bold 24 px, white
+
+  Heights below 100 km show in m or ft. From 100 km they show in km, or in mi in feet
+  mode.
+- **Band:** a dark horizontal band (62% black, fading out at both ends, 380 × 62 px),
+  with thin gold lines along its top and bottom edges.
+- **Motion:**
+  - Rises 10 px while fading in (0.25 s).
+  - Holds for 2.8 s.
+  - Drifts up 8 px while fading out (0.6 s).
+- **Sound:** a soft two-tone chime.
+
+## Main window (R6)
+
+- **Frame:**
+  - A portrait frame with the addon icon in the round portrait at the top left.
+  - The title "Jumpers" and a close button.
+  - Three tabs at the bottom: **Personal Stats**, **Leaderboard** (tagged `v2`), **Settings**.
+- **Personal Stats:**
+  - A **Character / Account** toggle.
+  - **Height climbed:** a big number (Changa One), "N jumps × 1.5 m".
+  - A progress bar from the last landmark passed (with ✓) to the next one, with
+    "Milestone k of 58 · p% there · N jumps to go".
+  - **Totals:** a table with Today and All time columns. Rows: Jumps, Floors, Streaks.
+  - **Best streak:** Today, 7 days, 30 days, Year, All time, each coloured by its tier.
+  - **All milestones:** a collapsible list showing passed ✓, next highlighted and the
+    rest dimmed.
+- **Leaderboard:** v1 shows a short "coming in v2" notice. The v2 layout is:
+  - period buttons (Today / 7 days / 30 days / Year)
+  - a "Players online" checkbox
+  - a table of rank, player (class colour, online dot), best streak (tier colour) and
+    when it was set
+  - your own row highlighted
+- **Settings** (R6.3):
+  - Counter group (show, size slider with steppers, unlock + reset, reduced effects),
+    with a live preview of the counter beside it and a "Play sample streak" button.
+  - Sound volume slider ("Off" at 0%).
+  - Metres / Feet toggle.
+  - Minimap button checkbox.
+- **Minimap button:**
+  - The addon icon, via LibDataBroker + LibDBIcon.
+  - Tooltip: "Jumpers", "Best streak today: xN", "Click open · Drag move".
+
+## Milestones (R3.3)
+
+Heights are in metres. Rows marked WoW are estimates and are measured in game before
+release.
+
+| # | Landmark | m | | # | Landmark | m |
+|---|---|---|---|---|---|---|
+| 1 | Durotar zeppelin tower (WoW) | 20 | | 30 | Kármán line, edge of space | 100,000 |
+| 2 | Westfall Lighthouse (WoW) | 30 | | 31 | Northern lights | 130,000 |
+| 3 | Cathedral of Light spire (WoW) | 45 | | 32 | Lowest satellite orbits | 160,000 |
+| 4 | Thunder Bluff mesa (WoW) | 65 | | 33 | Sputnik 1, lowest point | 215,000 |
+| 5 | Statue of Liberty | 93 | | 34 | Vostok 1, first human in space | 327,000 |
+| 6 | Great Pyramid of Giza | 139 | | 35 | International Space Station | 420,000 |
+| 7 | Space Needle | 184 | | 36 | Starlink satellites | 550,000 |
+| 8 | Karazhan (WoW) | 250 | | 37 | Iridium satellites | 780,000 |
+| 9 | Eiffel Tower | 330 | | 38 | Ceres, edge to edge | 940,000 |
+| 10 | Empire State Building | 443 | | 39 | Makemake, edge to edge | 1,430,000 |
+| 11 | Tokyo Skytree | 634 | | 40 | Pluto, edge to edge | 2,377,000 |
+| 12 | Burj Khalifa | 828 | | 41 | The Moon, edge to edge | 3,474,000 |
+| 13 | Teldrassil (WoW) | 1,100 | | 42 | Mercury, edge to edge | 4,879,000 |
+| 14 | Ben Nevis | 1,345 | | 43 | Mars, edge to edge | 6,779,000 |
+| 15 | Mount Hoverla | 2,061 | | 44 | O3b satellites | 8,062,000 |
+| 16 | Mount Olympus | 2,918 | | 45 | Earth, edge to edge | 12,742,000 |
+| 17 | Mount Fuji | 3,776 | | 46 | GPS satellites | 20,200,000 |
+| 18 | Mont Blanc | 4,806 | | 47 | Geostationary orbit | 35,786,000 |
+| 19 | Kilimanjaro | 5,895 | | 48 | Once around the Earth | 40,075,000 |
+| 20 | Aconcagua | 6,961 | | 49 | Neptune, edge to edge | 49,244,000 |
+| 21 | Mount Everest | 8,849 | | 50 | Twice around the Earth | 80,150,000 |
+| 22 | Airliners cruise here | 11,000 | | 51 | Saturn, edge to edge | 116,460,000 |
+| 23 | Ozone layer | 15,000 | | 52 | Jupiter, edge to edge | 139,820,000 |
+| 24 | Concorde cruised here | 18,000 | | 53 | Saturn's rings, edge to edge | 273,000,000 |
+| 25 | SR-71 Blackbird record | 25,929 | | 54 | The Moon | 384,400,000 |
+| 26 | Highest crewed balloon, 1961 | 34,668 | | 55 | To the Moon and back | 768,800,000 |
+| 27 | Highest skydive | 41,420 | | 56 | The Sun, edge to edge | 1,392,700,000 |
+| 28 | Highest weather balloon | 53,000 | | 57 | The Moon's orbit, all the way round | 2,415,000,000 |
+| 29 | Shooting stars burn up | 75,000 | | 58 | Around the Sun | 4,375,000,000 |
+
+The space end is meant as a lifelong dream. At 5,000 jumps a day the Moon's diameter
+takes about 1.3 years, and the distance to the Moon about 140 years.
