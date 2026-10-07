@@ -20,3 +20,4 @@ read_globals = {
 }
 
 files["spec/"] = { std = "+busted" }
+files["spec/wow_mock.lua"] = { max_line_length = false, ignore = { "143", "212" } }
