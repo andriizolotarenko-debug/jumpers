@@ -15,6 +15,9 @@ local GT = GH * 256 / 192          -- glyph texture size
 local B0 = 0.75                    -- cloth texture brightness
 local NUM_SIZE, X_SIZE = 25, 18
 local NUM_Y, X_Y = 0.8, -1.7       -- puts both baselines at cap-height / 2 below centre
+-- Advance widths from the font file (Changa One: "x" 0.54 em, digits 0.6 em). Measuring in
+-- game is unreliable: outlined text reports a wider string.
+local X_W, DIGIT_W = 0.54 * X_SIZE, 0.6 * NUM_SIZE
 local DEPTH = Tiers.DEPTH
 local SIDE_U, SIDE_V = 160 / 256, 144 / 256
 
@@ -85,14 +88,25 @@ local function layer(parent, level)
   return f
 end
 
+-- One child frame per depth (drop, DEPTH ... 1, face). Font strings have no sublevels,
+-- so separate frame levels are what keeps the extrusion behind the face.
+local function depthFrames(parent)
+  local level = parent:GetFrameLevel()
+  local f = { layers = {} }
+  f.drop = layer(parent, level + 1)
+  for d = DEPTH, 1, -1 do f.layers[d] = layer(parent, level + 2 + (DEPTH - d)) end
+  f.face = layer(parent, level + 2 + DEPTH)
+  return f
+end
+
 -- A text in the extruded style: drop + DEPTH copies + face, or one outlined face.
-local function textStack(frame, size)
+local function textStack(frames, size)
   local s = { size = size, layers = {} }
-  s.drop = frame:CreateFontString(nil, "ARTWORK", nil, 0)
+  s.drop = frames.drop:CreateFontString(nil, "ARTWORK")
   for d = DEPTH, 1, -1 do
-    s.layers[d] = frame:CreateFontString(nil, "ARTWORK", nil, 1 + (DEPTH - d))
+    s.layers[d] = frames.layers[d]:CreateFontString(nil, "ARTWORK")
   end
-  s.face = frame:CreateFontString(nil, "ARTWORK", nil, 7)
+  s.face = frames.face:CreateFontString(nil, "ARTWORK")
   for _, fs in ipairs({ s.drop, s.face, unpack(s.layers) }) do
     setFont(fs, size)
     fs:SetJustifyH("LEFT")
@@ -175,17 +189,18 @@ function Counter.New(parent, opts)
   -- core: glyph + count
   local core = layer(inner, base + 5)
   self.core = core
-  self.glyphDrop = tex(core, "BORDER", 0, "glyph")
+  local depth = depthFrames(core)
+  self.glyphDrop = tex(depth.drop, "BORDER", 0, "glyph")
   self.glyphLayers = {}
   for d = DEPTH, 1, -1 do
-    self.glyphLayers[d] = tex(core, "BORDER", 1 + (DEPTH - d), "glyph")
+    self.glyphLayers[d] = tex(depth.layers[d], "BORDER", 0, "glyph")
   end
-  self.glyphFace = tex(core, "BORDER", 7, "glyph")
-  self.xText = textStack(core, X_SIZE)
-  self.numText = textStack(core, NUM_SIZE)
+  self.glyphFace = tex(depth.face, "BORDER", 0, "glyph")
+  self.xText = textStack(depth, X_SIZE)
+  self.numText = textStack(depth, NUM_SIZE)
 
   -- in front: lightning, sparks, ring, trim bursts
-  local front = layer(inner, base + 6)
+  local front = layer(inner, base + 6 + DEPTH + 2)
   self.front = front
   self.bolts = {}
   for i = 1, 6 do self.bolts[i] = tex(front, "ARTWORK", 0, "bolt1", "ADD") end
@@ -199,17 +214,17 @@ function Counter.New(parent, opts)
   end
 
   -- NEW BEST plaque + "previous xN"
-  local plaque = layer(inner, base + 7)
+  local plaque = layer(inner, base + 7 + DEPTH + 2)
   self.plaque = plaque
   self.plaqueGlow = tex(plaque, "BACKGROUND", 0, "glow", "ADD")
   tint(self.plaqueGlow, PLAQUE_GOLD)
-  self.plaqueText = textStack(plaque, 17)
+  self.plaqueText = textStack(depthFrames(plaque), 17)
   self.stars = {}
   for i = 1, 6 do
     self.stars[i] = tex(plaque, "OVERLAY", 0, "star", "ADD")
     tint(self.stars[i], mix(PLAQUE_GOLD, WHITE, 0.4))
   end
-  self.prev = layer(inner, base + 8)
+  self.prev = layer(inner, base + 8 + 2 * (DEPTH + 2))
   self.prevText = self.prev:CreateFontString(nil, "OVERLAY")
   self.prevText:SetFont(STANDARD_TEXT_FONT, 18, "THICKOUTLINE")
   self.prevText:SetTextColor(0.92, 0.92, 0.92)
@@ -266,7 +281,7 @@ function Counter:Layout(n)
   stackDo(xs, function(fs) fs:SetText("x") end)
   stackDo(ns_, function(fs) fs:SetText(num) end)
 
-  local xW, nW = xs.face:GetStringWidth(), ns_.face:GetStringWidth()
+  local xW, nW = X_W, #num * DIGIT_W
   local bw = 9 + GW + 5 + xW + 2 + nW + 12
   local x0, x1 = -bw / 2, bw / 2
   self.bw, self.x0, self.x1 = bw, x0, x1

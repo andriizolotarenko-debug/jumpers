@@ -115,6 +115,9 @@ Exact look and timings: [UI-SPEC.md](UI-SPEC.md).
 - **Count text.**
   - x1–x6: one FontString with `OUTLINE`.
   - From x7: 4 offset FontStrings for the extrusion plus the face.
+  - Each depth (drop, 4 extrusion copies, face) lives in its own child frame with a rising
+    frame level: font strings have no draw sublevels. Text widths come from the font's
+    advance widths, not `GetStringWidth`, which over-reports outlined text.
 - **Animation.** One OnUpdate per counter, running only while the counter is shown. It
   drives the window fade (hold 1 s, fade by 3 s), the pops, trim bursts, tier-up flash and
   ring, the 4 stacking effects and the end (snap or fade, NEW BEST hold). Effects are
