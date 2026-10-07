@@ -32,7 +32,7 @@ local function playSample()
       ui.preview:Jump(i)
     else
       sample:Cancel()
-      ui.preview:End(60, false)
+      ui.preview:End(60)
       C_Timer.After(1.2, function() sample = nil; if ui.box:IsVisible() then showPreview() end end)
     end
   end)

@@ -64,9 +64,15 @@ function CounterUI.Init()
     if demo or not ns.Settings.Get("show") then return end
     counter:Jump(n)
   end)
-  ns.On("STREAK_END", function(n, isNewBest, prev)
+  ns.On("STREAK_END", function(n, isNewBest, prev, isTodayBest, prevToday)
     if demo then return end
-    counter:End(n, isNewBest, prev)
+    if isNewBest then
+      counter:End(n, "best", prev)
+    elseif isTodayBest then
+      counter:End(n, "today", prevToday)
+    else
+      counter:End(n)
+    end
     if ns.Settings.Get("unlocked") then C_Timer.After(2.2, applySettings) end
   end)
   ns.On("DEMO_JUMP", function(n)
@@ -74,7 +80,7 @@ function CounterUI.Init()
     counter:Jump(n)
   end)
   ns.On("DEMO_END", function(n)
-    counter:End(n, n > 10, ns.char.best > 0 and ns.char.best or nil)
+    counter:End(n, n > 10 and "best" or nil, ns.char.best > 0 and ns.char.best or nil)
     C_Timer.After(2.2, function() demo = false; if ns.Settings.Get("unlocked") then applySettings() end end)
   end)
   ns.On("SETTINGS", function(key)

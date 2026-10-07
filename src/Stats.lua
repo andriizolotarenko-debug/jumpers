@@ -49,10 +49,12 @@ function Stats.addJump(s, today)
   e.j = e.j + 1
 end
 
--- Records an ended streak. Returns isNewBest, previousBest.
--- NEW BEST only counts for streaks above x10 (R2.9); the best itself always updates.
+-- Records an ended streak. Returns isNewBest, previousBest, isTodayBest, previousTodayBest.
+-- Records only count for streaks above x10 (R2.9); the bests themselves always update.
+-- isTodayBest is set only when it is not also an all-time record.
 function Stats.endStreak(s, today, n)
   local prev = s.best
+  local prevToday = s.days[today] and s.days[today].b or 0
   if n >= Stats.MIN_STREAK then
     s.streaks = s.streaks + 1
     local e = day(s, today)
@@ -60,7 +62,9 @@ function Stats.endStreak(s, today, n)
     if n > e.b then e.b = n end
   end
   if n > s.best then s.best = n end
-  return n > prev and n > Stats.NEW_BEST_ABOVE, prev
+  local isNewBest = n > prev and n > Stats.NEW_BEST_ABOVE
+  local isTodayBest = not isNewBest and n > prevToday and n > Stats.NEW_BEST_ABOVE
+  return isNewBest, prev, isTodayBest, prevToday
 end
 
 function Stats.today(s, today)

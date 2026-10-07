@@ -44,9 +44,9 @@ end
 
 local function endStreak(ended)
   local today = ns.Today()
-  local isNewBest, prev = ns.Stats.endStreak(ns.char, today, ended.n)
+  local isNewBest, prev, isTodayBest, prevToday = ns.Stats.endStreak(ns.char, today, ended.n)
   ns.Stats.endStreak(ns.account, today, ended.n)
-  ns.Fire("STREAK_END", ended.n, isNewBest, prev)
+  ns.Fire("STREAK_END", ended.n, isNewBest, prev, isTodayBest, prevToday)
 end
 
 local function tick()

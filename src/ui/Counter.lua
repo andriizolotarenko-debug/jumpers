@@ -25,14 +25,17 @@ local GOLD = Tiers.hex("#f2c75c")
 local SPARK_GOLD = Tiers.mix(GOLD, { 1, 1, 1 }, 0.25)
 local GOLD_TOP, GOLD_BOTTOM = Tiers.hex("#ffe7a0"), Tiers.hex("#9c6a1c")
 local PLAQUE_GOLD = Tiers.hex("#ffd76a")
+local PLAQUE_SILVER, PLAQUE_SLATE = Tiers.hex("#e4eef7"), Tiers.hex("#6f8aa3")
 local RIM = Tiers.hex("#1a1107")
 local WHITE, BLACK = { 1, 1, 1 }, { 0, 0, 0 }
 local mix = Tiers.mix
 
 -- Gold ornaments and gems by group (Tiers.ORNAMENTS: x75, x150, x350, x400, x500, x750).
 -- ax: anchored to the band's Left / Right edge or its Centre; x, y, w, h in UI px (y up);
--- u, v crop the texture; fh / fv mirror it; gem = stone colour; until = hidden from that group on.
+-- u, v crop the texture; fh / fv mirror it; gem = stone colour (shape "rhombus" or octagon);
+-- side = drawn with the tails; until = hidden from that group on.
 local SAPPHIRE, EMERALD, RUBY, DIAMOND = { 0.3, 0.6, 1 }, { 0.25, 0.95, 0.5 }, { 1, 0.2, 0.25 }, { 0.92, 0.97, 1 }
+local PEARL = { 1, 0.95, 0.86 }
 local PIECES = {}
 do
   local function add(t) PIECES[#PIECES + 1] = t end
@@ -43,8 +46,8 @@ do
   end
   add({ g = 2, tex = "orn_crest", ax = "C", x = 0, y = 21, w = 48, h = 20, u = 192 / 256, v = 80 / 128, ["until"] = 6 })
   add({ g = 2, tex = "orn_crest", ax = "C", x = 0, y = -21, w = 48, h = 20, u = 192 / 256, v = 80 / 128, fv = true })
-  add({ g = 3, tex = "orn_wing", ax = "L", x = -32, y = -5, w = 26, h = 24, u = 104 / 128, v = 96 / 128 })
-  add({ g = 3, tex = "orn_wing", ax = "R", x = 32, y = -5, w = 26, h = 24, u = 104 / 128, v = 96 / 128, fh = true })
+  add({ g = 3, gem = RUBY, shape = "rhombus", side = true, ax = "L", x = -24, y = -6, w = 12, h = 16 })
+  add({ g = 3, gem = RUBY, shape = "rhombus", side = true, ax = "R", x = 24, y = -6, w = 12, h = 16 })
   local runs = { { "L", 18, 19.5 }, { "R", -18, 19.5, true }, { "L", 18, -19.5, false, true }, { "R", -18, -19.5, true, true } }
   for _, c in ipairs(runs) do
     add({ g = 4, tex = "orn_run", ax = c[1], x = c[2], y = c[3], w = 24, h = 8, u = 96 / 128, v = 1, fh = c[4], fv = c[5] })
@@ -57,11 +60,13 @@ do
   for _, c in ipairs({ { "L", 18, 19.7 }, { "R", -18, 19.7 }, { "L", 18, -19.7 }, { "R", -18, -19.7 } }) do
     add({ g = 5, gem = DIAMOND, ax = c[1], x = c[2], y = c[3], w = 4.5, h = 4.5 })
   end
-  add({ g = 6, tex = "orn_crown", ax = "C", x = 0, y = 25, w = 52, h = 28, u = 208 / 256, v = 112 / 128 })
-  add({ g = 6, gem = RUBY, ax = "C", x = 0, y = 36, w = 7, h = 7 })
-  add({ g = 6, gem = RUBY, ax = "C", x = -18, y = 30, w = 5, h = 5 })
-  add({ g = 6, gem = RUBY, ax = "C", x = 18, y = 30, w = 5, h = 5 })
-  add({ g = 6, gem = SAPPHIRE, ax = "C", x = 0, y = 19, w = 7, h = 7 })
+  add({ g = 6, tex = "orn_crown", ax = "C", x = 0, y = 26, w = 60, h = 32, u = 240 / 256, v = 1 })
+  for _, c in ipairs({
+    { DIAMOND, 0, 40, 6 }, { RUBY, -11, 35, 4.5 }, { RUBY, 11, 35, 4.5 }, { PEARL, -23, 31, 3.5 }, { PEARL, 23, 31, 3.5 },
+    { SAPPHIRE, 0, 16, 6 }, { RUBY, -14, 16, 4 }, { RUBY, 14, 16, 4 },
+  }) do
+    add({ g = 6, gem = c[1], ax = "C", x = c[2], y = c[3], w = c[4], h = c[4] })
+  end
 end
 
 local function clamp01(v) if v < 0 then return 0 elseif v > 1 then return 1 end return v end
@@ -218,14 +223,15 @@ function Counter.New(parent, opts)
   -- gold ornaments and gems (UI-SPEC: Gold ornaments), one texture per piece
   self.pieces = {}
   for i, def in ipairs(PIECES) do
-    local frame = def.tex == "orn_wing" and sides or mid
+    local frame = def.side and sides or mid
     local p = { def = def }
     if def.gem then
-      p.set = tex(frame, "ARTWORK", 5, "gem_set")
-      p.tex = tex(frame, "ARTWORK", 6, "gem")
+      local file = def.shape == "rhombus" and "gem_rhombus" or "gem"
+      p.set = tex(frame, "ARTWORK", 5, file .. "_set")
+      p.tex = tex(frame, "ARTWORK", 6, file)
       tint(p.tex, def.gem)
     else
-      p.tex = tex(frame, "ARTWORK", def.tex == "orn_wing" and 3 or 4, def.tex)
+      p.tex = tex(frame, "ARTWORK", 4, def.tex)
       local u, v = def.u or 1, def.v or 1
       p.tex:SetTexCoord(def.fh and u or 0, def.fh and 0 or u, def.fv and v or 0, def.fv and 0 or v)
     end
@@ -298,15 +304,20 @@ function Counter.New(parent, opts)
   return self
 end
 
-function Counter:PreparePlaque()
+-- The plaque reads NEW BEST! in gold (all-time record) or BEST TODAY! in silver (today's).
+function Counter:PreparePlaque(kind)
   local s = self.plaqueText
-  stackDo(s, function(fs) fs:SetText("NEW BEST!"); fs:SetJustifyH("CENTER") end)
-  s.face:SetTextColor(PLAQUE_GOLD[1], PLAQUE_GOLD[2], PLAQUE_GOLD[3])
+  local today = kind == "today"
+  local face = today and PLAQUE_SILVER or PLAQUE_GOLD
+  stackDo(s, function(fs) fs:SetText(today and "BEST TODAY!" or "NEW BEST!"); fs:SetJustifyH("CENTER") end)
+  s.face:SetTextColor(face[1], face[2], face[3])
   s.drop:SetTextColor(0, 0, 0, 0.35)
   for d = 1, 3 do
-    local c = mix(PLAQUE_GOLD, BLACK, 0.45 + 0.1 * d)
+    local c = mix(today and PLAQUE_SLATE or PLAQUE_GOLD, BLACK, 0.45 + 0.1 * d)
     s.layers[d]:SetTextColor(c[1], c[2], c[3])
   end
+  tint(self.plaqueGlow, today and PLAQUE_SILVER or PLAQUE_GOLD)
+  for i = 1, 6 do tint(self.stars[i], mix(face, WHITE, 0.4)) end
   s.layers[4]:Hide()
   place(s.face, 0, 1.5, 200, 24)
   for d = 1, 3 do place(s.layers[d], 0, 1.5 - d, 200, 24) end
@@ -547,14 +558,16 @@ function Counter:Jump(n)
   self.root:Show()
 end
 
-function Counter:End(n, isNewBest, prev)
+-- record: "best" (all-time), "today" (today's best) or nil.
+function Counter:End(n, record, prev)
   if self.static or not self.root:IsShown() then return end
   local now = GetTime()
-  if isNewBest then
+  if record then
+    self:PreparePlaque(record)
     self.best = { at = now }
-    self:Pop(0.4, 0.3)
-    self:Burst("mid")
-    self:Sound("fanfare")
+    self:Pop(record == "best" and 0.4 or 0.3, 0.3)
+    self:Burst("mid", record == "today" and mix(PLAQUE_SILVER, WHITE, 0.3) or nil)
+    self:Sound(record == "best" and "fanfare" or "tierup")
     self.plaque:Show()
     self.plaque:SetAlpha(0)
     if prev and prev > 0 then
@@ -801,7 +814,7 @@ function Counter:Update(now, elapsed)
       self.plaque:SetScale(math.max(0.01, ps))
       self.plaque:ClearAllPoints()
       -- clear the x150 crest, and the x750 crown
-      local lift = look.ornaments >= 6 and 22 or (look.ornaments >= 2 and 9 or 0)
+      local lift = look.ornaments >= 6 and 25 or (look.ornaments >= 2 and 9 or 0)
       self.plaque:SetPoint("CENTER", self.inner, "CENTER", 0, (H / 2 + 17 + lift) / math.max(0.01, ps))
       self.plaqueGlow:SetAlpha(0.45 + 0.2 * math.sin(now * 5))
       for i = 1, 6 do self.stars[i]:SetAlpha(0.5 + 0.5 * math.sin(now * 6 + i * 1.7)) end

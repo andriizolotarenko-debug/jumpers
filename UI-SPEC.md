@@ -112,14 +112,15 @@ of the streak and fade with the ribbon.
 |---|---|---|
 | x75 | Corner curls | A short gold scroll with a leaf at each corner of the band, 12 × 12 |
 | x150 | Crest and pendant | A diamond with a ball and two scrolls on top of the band, mirrored below it, 48 × 20 |
-| x350 | Wings | Three short filigree strokes with curled ends past each tail, 26 × 24 |
+| x350 | Rhombus rubies | A rhombus-cut ruby in a gold setting, set into the notch of each tail, 12 × 16 |
 | x400 | Runs and sapphires | Filigree strips along the top and bottom trim (24 × 8, four), a sapphire set in the crest and the pendant |
 | x500 | Emeralds and diamonds | An emerald on each corner curl, a small diamond on each run |
-| x750 | Crown | A crown replaces the top crest: rubies on its three points, a sapphire in its band |
+| x750 | Crown | Replaces the top crest, 60 × 32: five points, recessed panels, raised ribs with curls and arches, an engraved band with a row of pearls. A diamond on the centre point, rubies on the tall points, pearls on the short ones, a sapphire and two rubies on the band |
 
 Drawn like the trim: gold gradient `#ffe7a0 → #d9a640 → #9c6a1c` with a dark rim. Gems are
 a faceted stone in greys, tinted per gem (sapphire, emerald, ruby, diamond), in a gold
-setting. With the crest on, the NEW BEST plaque sits 9 px higher; with the crown, 22 px.
+setting (octagon, or rhombus for the x350 rubies). With the crest on, the NEW BEST plaque
+sits 9 px higher; with the crown, 25 px.
 
 ## Size growth (R2.7)
 
@@ -168,8 +169,8 @@ from the sources in `art/`:
 | `caption_band.tga`, `line.tga` | Milestone caption band and its gold lines |
 | `icon.tga`, `icon_round.tga` | Addon icon: window portrait, leaderboard notice |
 | `icon_small.tga` | Minimap button and AddOns list: a big gold jumper on blue, readable at 16 px |
-| `orn_corner.tga`, `orn_crest.tga`, `orn_wing.tga`, `orn_run.tga`, `orn_crown.tga` | Gold ornaments, untinted |
-| `gem.tga`, `gem_set.tga` | Gem stone (tinted per gem) and its gold setting |
+| `orn_corner.tga`, `orn_crest.tga`, `orn_run.tga`, `orn_crown.tga` | Gold ornaments, untinted |
+| `gem.tga`, `gem_set.tga`, `gem_rhombus.tga`, `gem_rhombus_set.tga` | Gem stones (tinted per gem) and their gold settings |
 | `rainbow.tga` | Hue strip multiplied over the band at x1000 |
 | `ChangaOne-Italic.ttf` + `OFL.txt` | Count font and its licence |
 
@@ -186,6 +187,10 @@ setting picks one (the slider moves in 25 % steps):
 ## NEW BEST! (R2.9)
 
 - **Trigger:** a streak above x10 ends and beats the stored best.
+- **BEST TODAY!** When a streak above x10 beats only today's best, the same sequence plays
+  with a silver plaque (`#e4eef7`, slate extrusion `#6f8aa3`), a smaller pop (0.3), silver
+  sparks and the tier-up chime instead of the fanfare. "previous xN" shows today's previous
+  best.
 - **Sequence (1.8 s hold, then the usual 0.12 s snap-out):**
   - The ribbon and effects return to full alpha within ~0.1 s.
   - The counter pops (amplitude 0.4, 0.3 s).

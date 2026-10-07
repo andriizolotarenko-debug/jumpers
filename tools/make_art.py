@@ -296,7 +296,7 @@ def quad(p0, c, p1, steps=40):
              (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * c[1] + t * t * p1[1]) for t in (i / steps for i in range(steps + 1))]
 
 
-def gilded(name, w, h, lines, fills=(), canvas=None):
+def gilded(name, w, h, lines, fills=(), canvas=None, engrave=(), panels=(), shine=()):
     """Gold strokes with a dark rim, in a w x h UI px box (y down). lines: [(points, width)],
     fills: [polygon]. Gold runs light at the top of the box to dark at the bottom."""
     k = PX * SS
@@ -324,7 +324,26 @@ def gilded(name, w, h, lines, fills=(), canvas=None):
     g.putalpha(gold)
     out = Image.new("RGBA", (W, Hh), RIM + (0,))
     out.putalpha(rim)
-    out = Image.alpha_composite(out, g).resize((int(w * PX), int(h * PX)), Image.LANCZOS)
+    out = Image.alpha_composite(out, g)
+    if panels:
+        # recessed panels: darker gold inside the outline
+        layer = Image.new("RGBA", (W, Hh), (0, 0, 0, 0))
+        pd = ImageDraw.Draw(layer)
+        for poly in panels:
+            pd.polygon([(x * k, y * k) for x, y in poly], fill=(60, 30, 0, 95))
+        out = Image.alpha_composite(out, layer)
+    if shine:
+        # raised highlights in pale gold
+        sd = ImageDraw.Draw(out)
+        for pts, width in shine:
+            sd.line([(x * k, y * k) for x, y in pts], fill=(255, 238, 170, 255), width=max(1, int(width * k)),
+                    joint="curve")
+    if engrave:
+        ed = ImageDraw.Draw(out)
+        for pts, width in engrave:
+            pp = [(x * k, y * k) for x, y in pts]
+            ed.line(pp, fill=RIM + (200,), width=max(1, int(width * k)), joint="curve")
+    out = out.resize((int(w * PX), int(h * PX)), Image.LANCZOS)
     cw, ch = canvas
     c = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
     c.paste(out, (0, 0))
@@ -347,25 +366,33 @@ def ornaments():
     diamond = [(24, 4), (29, 11), (24, 18), (19, 11)]
     ball = spiral(24, 2.4, 1.2, 1.2, 0, 1, steps=16)
     gilded("orn_crest", 48, 20, lines, fills=[diamond, ball], canvas=(256, 128))
-    # x350 wing, 26 x 24 UI px; its root (right middle) touches the tail tip
-    lines = []
-    for end, ctrl, curl_r in (((9, 4), (18, 3), 1.9), ((5, 12), (15, 10.5), 1.7), ((9, 20), (18, 21), 1.6)):
-        pts = quad((25, 12), ctrl, end)
-        a0 = math.atan2(pts[-1][1] - pts[-2][1], pts[-1][0] - pts[-2][0])
-        pts += spiral(end[0] + math.cos(a0 + math.pi / 2) * curl_r, end[1] + math.sin(a0 + math.pi / 2) * curl_r,
-                      curl_r, 0.4, a0 - math.pi / 2, -0.9)[1:]
-        lines.append((pts, 1.5))
-    gilded("orn_wing", 26, 24, lines, canvas=(128, 128))
     # x400 run: a filigree strip along the trim, 24 x 8 UI px, bottom edge on the trim
     wave = [(1 + i * 0.5, 5.2 - math.sin(i * 0.5 / 22 * 2 * math.pi) * 1.6) for i in range(45)]
     lines = [(wave, 1.2)]
     lines.append((spiral(4.5, 3.4, 1.7, 0.4, math.radians(200), -0.9), 1.0))
     lines.append((spiral(19.5, 3.0, 1.7, 0.4, math.radians(-20), 0.9), 1.0))
     gilded("orn_run", 24, 8, lines, fills=[spiral(12, 4.2, 1.1, 1.1, 0, 1, steps=12)], canvas=(128, 32))
-    # x750 crown, 52 x 28 UI px; bottom edge sits on the band's top edge
-    crown = [(3, 26), (4, 13), (13, 19), (26, 3), (39, 19), (48, 13), (49, 26)]
-    gilded("orn_crown", 52, 28, [([(3, 22), (49, 22)], 1.4)], fills=[crown], canvas=(256, 128))
+    # x750 crown, 60 x 32 UI px; the bottom of its band (y = 30) sits on the band's top trim
+    crown = [(6, 30), (6, 22), (7, 11), (13, 17), (19, 7), (25, 15), (30, 1), (35, 15), (41, 7), (47, 17),
+             (53, 11), (54, 22), (54, 30)]
+    inner = [(9, 21), (9.5, 15), (13, 19.5), (19, 11), (25, 18), (30, 6), (35, 18), (41, 11), (47, 19.5),
+             (50.5, 15), (51, 21)]
+    engrave = [(inner, 0.6), ([(7, 22.6), (53, 22.6)], 0.6), ([(7, 29), (53, 29)], 0.6)]
+    shine = [([(7, 23.6), (53, 23.6)], 0.45)]
+    # a raised rib with a curl up each spike, and arches between them
+    for x, top in ((19, 11.5), (30, 7), (41, 11.5)):
+        shine.append(([(x, 20.5), (x, top + 2.5)], 0.7))
+        shine.append((spiral(x - 1.2, top + 2.2, 1.0, 0.3, 0, 0.8), 0.5))
+        shine.append((spiral(x + 1.2, top + 2.2, 1.0, 0.3, math.pi, -0.8), 0.5))
+    for x0, x1 in ((9.5, 19), (19, 30), (30, 41), (41, 50.5)):
+        mid_ = (x0 + x1) / 2
+        shine.append((quad((x0 + 1, 21), (mid_, 15.5), (x1 - 1, 21)), 0.5))
+    # a row of pearls along the band
+    pearls = [spiral(9 + i * 3.4, 26.2, 0.7, 0.7, 0, 1, steps=10) for i in range(13)]
+    gilded("orn_crown", 60, 32, [], fills=[crown], canvas=(256, 128), engrave=engrave, panels=[inner],
+           shine=shine + [(p, 0.9) for p in pearls])
     gem()
+    gem_rhombus()
 
 
 def gem():
@@ -402,6 +429,40 @@ def gem():
     out.putalpha(rim)
     out = Image.alpha_composite(out, g)
     save(out.resize((64, 64), Image.LANCZOS), "gem_set")
+
+
+def gem_rhombus():
+    """A rhombus-cut stone (greys, tinted in game) and its gold setting, square canvas."""
+    S = 64 * SS
+    c = S / 2
+    def rh(scale):
+        r = (S / 2 - 2 * SS) * scale
+        return [(c, c - r), (c + r, c), (c, c + r), (c - r, c)]
+    outer, stone = rh(1.0), rh(1 / 1.3)
+    table = rh(0.36 / 1.3)
+    im = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    for i, v in enumerate((230, 170, 100, 150)):
+        d.polygon([stone[i], stone[(i + 1) % 4], table[(i + 1) % 4], table[i]], fill=(v, v, v, 255))
+    d.polygon(table, fill=(245, 245, 245, 255))
+    d.ellipse((c - 0.16 * S, c - 0.2 * S, c - 0.05 * S, c - 0.09 * S), fill=(255, 255, 255, 255))
+    save(im.resize((64, 64), Image.LANCZOS), "gem_rhombus")
+    ring = Image.new("L", (S, S), 0)
+    rd = ImageDraw.Draw(ring)
+    rd.polygon(rh(0.94), fill=255)
+    rd.polygon(rh(1 / 1.3 * 0.98), fill=0)
+    rim = Image.new("L", (S, S), 0)
+    ImageDraw.Draw(rim).polygon(outer, fill=255)
+    grad = np.zeros((S, S, 4), np.uint8)
+    for y in range(S):
+        grad[y, :, :3] = gold_at(y / S)
+        grad[y, :, 3] = 255
+    g = Image.fromarray(grad)
+    g.putalpha(ring)
+    out = Image.new("RGBA", (S, S), RIM + (0,))
+    out.putalpha(rim)
+    out = Image.alpha_composite(out, g)
+    save(out.resize((64, 64), Image.LANCZOS), "gem_rhombus_set")
 
 
 def rainbow():

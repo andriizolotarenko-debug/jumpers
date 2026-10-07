@@ -31,6 +31,21 @@ describe("Stats", function()
     assert.is_true(nb); assert.equal(11, prev)
   end)
 
+  it("flags BEST TODAY when only today's best is beaten", function()
+    local s = Stats.new()
+    Stats.endStreak(s, 1, 40)                       -- all-time 40
+    local nb, _, tb, prevToday = Stats.endStreak(s, 2, 15)
+    assert.is_false(nb); assert.is_true(tb); assert.equal(0, prevToday)
+    nb, _, tb, prevToday = Stats.endStreak(s, 2, 20)
+    assert.is_false(nb); assert.is_true(tb); assert.equal(15, prevToday)
+    nb, _, tb = Stats.endStreak(s, 2, 18)
+    assert.is_false(nb); assert.is_false(tb)
+    nb, _, tb = Stats.endStreak(s, 2, 50)            -- all-time wins, not both
+    assert.is_true(nb); assert.is_false(tb)
+    _, _, tb = Stats.endStreak(s, 3, 9)              -- x10 and below never count
+    assert.is_false(tb)
+  end)
+
   it("computes period bests", function()
     local s = Stats.new()
     Stats.endStreak(s, 100, 40)

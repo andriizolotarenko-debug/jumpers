@@ -76,8 +76,8 @@ The approved visual design, with exact values, is in [UI-SPEC.md](UI-SPEC.md).
   - x100 sparks
   - x200 rays
 - **R2.6a** Every 10th jump without a bigger moment gets a small spark pulse. From x75 the
-  gold frame gains ornaments: corner curls at x75, a crest and pendant at x150, wings at
-  x350, filigree runs and sapphires at x400, emeralds and diamonds at x500, a jewelled
+  gold frame gains ornaments: corner curls at x75, a crest and pendant at x150, rhombus
+  rubies in the tails at x350, filigree runs and sapphires at x400, emeralds and diamonds at x500, a jewelled
   crown at x750.
 - **R2.7** Size growth: **+0.1% per jump** from the first one (x100 = +10%,
   x1000 = +100%). Capped at **+300%** (reached at x3000). At the end it should be
@@ -89,6 +89,8 @@ The approved visual design, with exact values, is in [UI-SPEC.md](UI-SPEC.md).
   - A gold "NEW BEST!" plaque pops above it, with sparks and a fanfare.
   - "previous xN" shows under it.
   - After 1.8 s the counter snaps out as usual.
+  - A streak above x10 that beats only today's best shows **BEST TODAY!** the same way, in
+    silver.
 - **R2.10** **Milestone caption.** When the character's total height passes a landmark
   (R3.3), a caption appears above the counter for about 3 s:
   "You climbed / Mount Hoverla • 2,061 m". The streak is not interrupted.
