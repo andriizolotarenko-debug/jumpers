@@ -130,7 +130,8 @@ from the sources in `art/`:
 | `rays14.tga`, `rays9.tga` | The two x200 ray sets |
 | `bolt1.tga` … `bolt6.tga` | Lightning, 6 frames |
 | `caption_band.tga`, `line.tga` | Milestone caption band and its gold lines |
-| `icon.tga`, `icon_round.tga` | Addon icon (minimap, AddOns list, window portrait) |
+| `icon.tga`, `icon_round.tga` | Addon icon: window portrait, leaderboard notice |
+| `icon_small.tga` | Minimap button and AddOns list: a big white jumper on blue, readable at 16 px |
 | `ChangaOne-Italic.ttf` + `OFL.txt` | Count font and its licence |
 
 Sounds are the addon's own short synthesised OGG files in `media/sounds/`. `PlaySoundFile`

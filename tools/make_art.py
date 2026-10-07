@@ -280,6 +280,41 @@ def icon():
     save(rnd, "icon_round")
 
 
+# ---------- small icon: minimap button and the AddOns list ----------
+def icon_small():
+    """Full-bleed square: big white jumper with a dark outline on a blue radial ground.
+    The round medallion (icon.tga) does not read at 16-20 px."""
+    S = 512
+    y, x = np.mgrid[0:S, 0:S]
+    r = np.clip(np.hypot(x - S * 0.45, y - S * 0.4) / (S * 0.75), 0, 1)[..., None]
+    col = np.array((60, 140, 240)) * (1 - r) + np.array((8, 30, 90)) * r
+    ground = Image.fromarray(np.dstack([col, np.full((S, S, 1), 255)]).astype(np.uint8))
+    src = Image.open(os.path.join(ART, "glyph_source.png")).convert("RGBA")
+    box = src.split()[3].getbbox()
+    g = src.crop(box)
+    h = int(S * 0.86)
+    w = round(g.width * h / g.height)
+    if w > S * 0.86:
+        w = int(S * 0.86)
+        h = round(g.height * w / g.width)
+    a = g.resize((w, h), Image.LANCZOS).split()[3]
+    mask = Image.new("L", (S, S), 0)
+    mask.paste(a, ((S - w) // 2, (S - h) // 2))
+    base = np.asarray(mask)
+    dil = base.copy()
+    ow = 14
+    for k in range(48):
+        ang = k / 48 * 2 * math.pi
+        for rr in (ow, ow * 0.5):
+            dil = np.maximum(dil, np.roll(np.roll(base, int(round(math.sin(ang) * rr)), 0), int(round(math.cos(ang) * rr)), 1))
+    outline = Image.new("RGBA", (S, S), (10, 15, 30, 0))
+    outline.putalpha(Image.fromarray(dil))
+    face = Image.new("RGBA", (S, S), (255, 255, 255, 0))
+    face.putalpha(mask)
+    im = Image.alpha_composite(Image.alpha_composite(ground, outline), face)
+    save(im.resize((128, 128), Image.LANCZOS), "icon_small")
+
+
 if __name__ == "__main__":
     os.makedirs(MEDIA, exist_ok=True)
     random.seed(1)
@@ -289,4 +324,5 @@ if __name__ == "__main__":
     effects()
     caption()
     icon()
+    icon_small()
     print("ok")

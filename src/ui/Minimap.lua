@@ -13,7 +13,7 @@ function Minimap.Init()
   local launcher = LDB:NewDataObject("Jumpers", {
     type = "launcher",
     label = "Jumpers",
-    icon = ns.ICON,
+    icon = ns.ICON_SMALL,
     OnClick = function() ns.Window.Toggle() end,
     OnTooltipShow = function(tip)
       local _, _, best = ns.Stats.today(ns.char, ns.Today())

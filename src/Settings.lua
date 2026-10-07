@@ -8,6 +8,7 @@ local MEDIA = "Interface\\AddOns\\" .. ADDON .. "\\media\\"
 ns.MEDIA = MEDIA
 ns.FONT = MEDIA .. "ChangaOne-Italic.ttf"
 ns.ICON = MEDIA .. "icon"
+ns.ICON_SMALL = MEDIA .. "icon_small"   -- minimap button and the AddOns list
 
 Settings.DEFAULTS = {
   show = true,
