@@ -130,8 +130,30 @@ function SettingsTab.Build(page)
     ns.Fire("SETTINGS", "minimap")
   end), page, -2, -362)
 
+  -- progress
+  at(W_.Section(page, "Progress", W), page, 0, -400)
+  local resetProgress = W_.Button(page, "Reset progress", 140, function()
+    if StaticPopup_Show then StaticPopup_Show("JUMPERS_RESET_PROGRESS") else ns.ResetProgress() end
+  end)
+  at(resetProgress, page, 0, -424)
+  local warn = W_.Note(page, "Clears jumps, streaks, bests and milestones for this character and the account.")
+  warn:SetPoint("LEFT", resetProgress, "RIGHT", 10, 0)
+
   at(W_.Note(page, "Open this window: minimap button or |cffffd100/jumpers|r. Try |cffffd100/jumpers demo|r."),
-    page, 2, -400)
+    page, 2, -462)
+
+  if StaticPopupDialogs then
+    StaticPopupDialogs.JUMPERS_RESET_PROGRESS = {
+      text = "Reset all Jumpers progress?\nJumps, streaks, bests and milestones go back to zero.",
+      button1 = YES or "Yes",
+      button2 = NO or "No",
+      OnAccept = function() ns.ResetProgress() end,
+      timeout = 0,
+      whileDead = true,
+      hideOnEscape = true,
+      showAlert = true,
+    }
+  end
 
   box:SetScript("OnShow", showPreview)
   page:SetScript("OnShow", SettingsTab.Refresh)

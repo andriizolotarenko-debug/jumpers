@@ -29,6 +29,41 @@ local RIM = Tiers.hex("#1a1107")
 local WHITE, BLACK = { 1, 1, 1 }, { 0, 0, 0 }
 local mix = Tiers.mix
 
+-- Gold ornaments and gems by group (Tiers.ORNAMENTS: x75, x150, x350, x400, x500, x750).
+-- ax: anchored to the band's Left / Right edge or its Centre; x, y, w, h in UI px (y up);
+-- u, v crop the texture; fh / fv mirror it; gem = stone colour; until = hidden from that group on.
+local SAPPHIRE, EMERALD, RUBY, DIAMOND = { 0.3, 0.6, 1 }, { 0.25, 0.95, 0.5 }, { 1, 0.2, 0.25 }, { 0.92, 0.97, 1 }
+local PIECES = {}
+do
+  local function add(t) PIECES[#PIECES + 1] = t end
+  local corners = { { "L", -2, 16 }, { "R", 2, 16, true }, { "L", -2, -16, false, true }, { "R", 2, -16, true, true } }
+  for _, c in ipairs(corners) do
+    add({ g = 1, tex = "orn_corner", ax = c[1], x = c[2], y = c[3], w = 12, h = 12, u = 48 / 64, v = 48 / 64,
+      fh = c[4], fv = c[5] })
+  end
+  add({ g = 2, tex = "orn_crest", ax = "C", x = 0, y = 21, w = 48, h = 20, u = 192 / 256, v = 80 / 128, ["until"] = 6 })
+  add({ g = 2, tex = "orn_crest", ax = "C", x = 0, y = -21, w = 48, h = 20, u = 192 / 256, v = 80 / 128, fv = true })
+  add({ g = 3, tex = "orn_wing", ax = "L", x = -32, y = -5, w = 26, h = 24, u = 104 / 128, v = 96 / 128 })
+  add({ g = 3, tex = "orn_wing", ax = "R", x = 32, y = -5, w = 26, h = 24, u = 104 / 128, v = 96 / 128, fh = true })
+  local runs = { { "L", 18, 19.5 }, { "R", -18, 19.5, true }, { "L", 18, -19.5, false, true }, { "R", -18, -19.5, true, true } }
+  for _, c in ipairs(runs) do
+    add({ g = 4, tex = "orn_run", ax = c[1], x = c[2], y = c[3], w = 24, h = 8, u = 96 / 128, v = 1, fh = c[4], fv = c[5] })
+  end
+  add({ g = 4, gem = SAPPHIRE, ax = "C", x = 0, y = 20, w = 9, h = 9, ["until"] = 6 })
+  add({ g = 4, gem = SAPPHIRE, ax = "C", x = 0, y = -20, w = 9, h = 9 })
+  for _, c in ipairs({ { "L", -2.8, 16.5 }, { "R", 2.8, 16.5 }, { "L", -2.8, -16.5 }, { "R", 2.8, -16.5 } }) do
+    add({ g = 5, gem = EMERALD, ax = c[1], x = c[2], y = c[3], w = 5.5, h = 5.5 })
+  end
+  for _, c in ipairs({ { "L", 18, 19.7 }, { "R", -18, 19.7 }, { "L", 18, -19.7 }, { "R", -18, -19.7 } }) do
+    add({ g = 5, gem = DIAMOND, ax = c[1], x = c[2], y = c[3], w = 4.5, h = 4.5 })
+  end
+  add({ g = 6, tex = "orn_crown", ax = "C", x = 0, y = 25, w = 52, h = 28, u = 208 / 256, v = 112 / 128 })
+  add({ g = 6, gem = RUBY, ax = "C", x = 0, y = 36, w = 7, h = 7 })
+  add({ g = 6, gem = RUBY, ax = "C", x = -18, y = 30, w = 5, h = 5 })
+  add({ g = 6, gem = RUBY, ax = "C", x = 18, y = 30, w = 5, h = 5 })
+  add({ g = 6, gem = SAPPHIRE, ax = "C", x = 0, y = 19, w = 7, h = 7 })
+end
+
 local function clamp01(v) if v < 0 then return 0 elseif v > 1 then return 1 end return v end
 local function smooth(x) x = clamp01(x); return x * x * (3 - 2 * x) end
 local function rand(i, k) local v = math.sin(i * 12.9898 + k * 78.233) * 43758.5453; return v - math.floor(v) end
@@ -180,22 +215,28 @@ function Counter.New(parent, opts)
   gradient(self.gold[4], GOLD_TOP, GOLD_BOTTOM)
   self.flash = solid(mid, "OVERLAY", 1, WHITE, 1, "ADD")
 
-  -- gold ornaments: x75 corner curls, x150 crest + pendant (middle), x300 wings (sides)
-  self.ornCorner, self.ornCrest, self.ornWing = {}, {}, {}
-  local cu, cv = 72 / 128, 72 / 128
-  for i, f in ipairs({ { 0, 0 }, { 1, 0 }, { 0, 1 }, { 1, 1 } }) do
-    local t = tex(mid, "ARTWORK", 4, "orn_corner")
-    t:SetTexCoord(f[1] == 1 and cu or 0, f[1] == 1 and 0 or cu, f[2] == 1 and cv or 0, f[2] == 1 and 0 or cv)
-    self.ornCorner[i] = t
+  -- gold ornaments and gems (UI-SPEC: Gold ornaments), one texture per piece
+  self.pieces = {}
+  for i, def in ipairs(PIECES) do
+    local frame = def.tex == "orn_wing" and sides or mid
+    local p = { def = def }
+    if def.gem then
+      p.set = tex(frame, "ARTWORK", 5, "gem_set")
+      p.tex = tex(frame, "ARTWORK", 6, "gem")
+      tint(p.tex, def.gem)
+    else
+      p.tex = tex(frame, "ARTWORK", def.tex == "orn_wing" and 3 or 4, def.tex)
+      local u, v = def.u or 1, def.v or 1
+      p.tex:SetTexCoord(def.fh and u or 0, def.fh and 0 or u, def.fv and v or 0, def.fv and 0 or v)
+    end
+    self.pieces[i] = p
   end
-  for i = 1, 2 do
-    local t = tex(mid, "ARTWORK", 4, "orn_crest")
-    t:SetTexCoord(0, 192 / 256, i == 2 and 80 / 128 or 0, i == 2 and 0 or 80 / 128)
-    self.ornCrest[i] = t
-    local w = tex(sides, "ARTWORK", 3, "orn_wing")
-    w:SetTexCoord(i == 2 and 144 / 256 or 0, i == 2 and 0 or 144 / 256, 0, 1)
-    self.ornWing[i] = w
-  end
+  -- x1000: a hue strip multiplied over the grey band
+  self.rainbow = mid:CreateTexture(nil, "ARTWORK", nil, 1)
+  self.rainbow:SetTexture(M .. "rainbow", "REPEAT", "CLAMP")
+  self.rainbow:SetBlendMode("MOD")
+  noSnap(self.rainbow)
+  self.rainbow:Hide()
 
   -- x25 shine, clipped to the band
   local clip = CreateFrame("Frame", nil, inner)
@@ -352,11 +393,28 @@ function Counter:Layout(n)
   end
 
   -- colours
-  local cloth = look.cloth
+  place(self.rainbow, 0, 0, bw, H)
+  self.rainbow:SetShown(look.rainbow)
+  self:ApplyColors(look.cloth, look.glow)
+
+  -- trims
+  for i = 1, 4 do
+    self.edge[i]:SetShown(not look.trimMid)
+    self.rim[i]:SetShown(look.trimMid)
+    self.gold[i]:SetShown(look.trimMid)
+  end
+  self.tailTrim[1]:SetShown(look.trimSide); self.tailTrim[2]:SetShown(look.trimSide)
+  self:PlaceOrnaments(nil, 1)
+  self:LayoutBolts()
+end
+
+-- Tints everything that follows the tier colour. Called on layout, and every frame at x1000.
+function Counter:ApplyColors(cloth, glow)
+  local xs, ns_ = self.xText, self.numText
   local c = { math.min(1, cloth[1] / B0), math.min(1, cloth[2] / B0), math.min(1, cloth[3] / B0) }
-  tint(self.band, c)
+  if self.look.rainbow then tint(self.band, WHITE) else tint(self.band, c) end
   tint(self.tail[1], c); tint(self.tail[2], c)
-  local face = look.face
+  local face = mix(WHITE, glow, 0.2)
   tint(self.glyphFace, face)
   xs.face:SetTextColor(face[1], face[2], face[3])
   ns_.face:SetTextColor(face[1], face[2], face[3])
@@ -367,7 +425,6 @@ function Counter:Layout(n)
     tint(self.glyphLayers[d], e)
     xs.layers[d]:SetTextColor(e[1], e[2], e[3]); ns_.layers[d]:SetTextColor(e[1], e[2], e[3])
   end
-  local glow = look.glow
   tint(self.aura, glow)
   local rc = mix(glow, WHITE, 0.4)
   tint(self.rays[1], rc); tint(self.rays[2], rc)
@@ -376,38 +433,23 @@ function Counter:Layout(n)
   local bc = mix(glow, WHITE, 0.35)
   for i = 1, 6 do tint(self.bolts[i], bc) end
   tint(self.ring, mix(glow, WHITE, 0.3))
-
-  -- trims
-  for i = 1, 4 do
-    self.edge[i]:SetShown(not look.trimMid)
-    self.rim[i]:SetShown(look.trimMid)
-    self.gold[i]:SetShown(look.trimMid)
-  end
-  self.tailTrim[1]:SetShown(look.trimSide); self.tailTrim[2]:SetShown(look.trimSide)
-  self:LayoutOrnaments()
-  self:LayoutBolts()
+  self.glow = glow
 end
 
--- Ornament groups: { texture, x, y, w, h } per piece; group k shows from Tiers.ORNAMENTS[k].
-function Counter:LayoutOrnaments()
-  local x0, x1 = self.x0, self.x1
-  local c, cr, w = self.ornCorner, self.ornCrest, self.ornWing
-  self.ornSpecs = {
-    { { c[1], x0 - 5, 19, 18, 18 }, { c[2], x1 + 5, 19, 18, 18 }, { c[3], x0 - 5, -19, 18, 18 }, { c[4], x1 + 5, -19, 18, 18 } },
-    { { cr[1], 0, 21, 48, 20 }, { cr[2], 0, -21, 48, 20 } },
-    { { w[1], x0 - 36, -4, 36, 32 }, { w[2], x1 + 36, -4, 36, 32 } },
-  }
-  self:PlaceOrnaments(nil, 1)
-end
-
--- Places every ornament; group `grow` is drawn at `k` times its size (the appear pop).
+-- Places every piece of the ornament groups shown at this count. Group `grow` is drawn at
+-- `k` times its size (the appear pop).
 function Counter:PlaceOrnaments(grow, k)
   local shown = self.look.ornaments
-  for g, specs in ipairs(self.ornSpecs) do
-    local f = g == grow and k or 1
-    for _, sp in ipairs(specs) do
-      place(sp[1], sp[2], sp[3], sp[4] * f, sp[5] * f)
-      sp[1]:SetShown(g <= shown)
+  for _, p in ipairs(self.pieces) do
+    local d = p.def
+    local on = d.g <= shown and not (d["until"] and shown >= d["until"])
+    p.tex:SetShown(on)
+    if p.set then p.set:SetShown(on) end
+    if on then
+      local f = d.g == grow and k or 1
+      local x = (d.ax == "L" and self.x0 or d.ax == "R" and self.x1 or 0) + d.x
+      place(p.tex, x, d.y, d.w * f, d.h * f)
+      if p.set then place(p.set, x, d.y, d.w * 1.3 * f, d.h * 1.3 * f) end
     end
   end
 end
@@ -492,7 +534,7 @@ function Counter:Jump(n)
   elseif event == "pulse" then
     self:Pop(0.24, 0.2)
     self:Sound("tick")
-    self:Burst("pulse", Tiers.mix(self.look.glow, WHITE, 0.5))
+    self:Burst("pulse", Tiers.mix(self.glow or self.look.glow, WHITE, 0.5))
   elseif n == 1 then
     self:Pop(0.3, 0.2)
     self:Sound("tick")
@@ -576,8 +618,12 @@ local function updateBursts(self, now)
       count, speed, lifeBase = 14, 0.55, 0.4
     elseif burst.part == "ornament" then
       edges = {}
-      for _, sp in ipairs(self.ornSpecs[burst.group] or {}) do
-        edges[#edges + 1] = { sp[2] - sp[4] / 2, sp[2] + sp[4] / 2, sp[3], sp[3] >= 0 and 1 or -1 }
+      for _, piece in ipairs(self.pieces) do
+        local pd = piece.def
+        if pd.g == burst.group then
+          local x = (pd.ax == "L" and self.x0 or pd.ax == "R" and self.x1 or 0) + pd.x
+          edges[#edges + 1] = { x - pd.w / 2, x + pd.w / 2, pd.y, pd.y >= 0 and 1 or -1 }
+        end
       end
       if #edges == 0 then edges = { { self.x0, self.x1, h, 1 } } end
     else
@@ -754,7 +800,8 @@ function Counter:Update(now, elapsed)
       self.plaque:SetAlpha(clamp01(pt * 2))
       self.plaque:SetScale(math.max(0.01, ps))
       self.plaque:ClearAllPoints()
-      local lift = look.ornaments >= 2 and 9 or 0   -- clear the x150 crest
+      -- clear the x150 crest, and the x750 crown
+      local lift = look.ornaments >= 6 and 22 or (look.ornaments >= 2 and 9 or 0)
       self.plaque:SetPoint("CENTER", self.inner, "CENTER", 0, (H / 2 + 17 + lift) / math.max(0.01, ps))
       self.plaqueGlow:SetAlpha(0.45 + 0.2 * math.sin(now * 5))
       for i = 1, 6 do self.stars[i]:SetAlpha(0.5 + 0.5 * math.sin(now * 6 + i * 1.7)) end
@@ -779,6 +826,12 @@ function Counter:Update(now, elapsed)
   self.sides:SetAlpha(look.sides * flag)
   self.mid:SetAlpha(look.mid * flag)
   self.core:SetAlpha(look.core)
+  if look.rainbow then
+    local cloth, glow = Tiers.rainbowAt(now)
+    self:ApplyColors(cloth, glow)
+    local u = (now * 0.15) % 1
+    self.rainbow:SetTexCoord(u, u + self.bw / 90, 0, 1)
+  end
   -- reduced effects keep the colours and the x25 shine, and drop lightning, sparks and rays
   local effects = self.reduced and math.min(look.effects, 1) or look.effects
   updateEffects(self, now, effects, flag)

@@ -19,6 +19,9 @@ Tiers.LIST = {
   { min = 50, name = "Rare", cloth = hex("#0b5cbf"), glow = hex("#2b8cff") },
   { min = 100, name = "Epic", cloth = hex("#7f30c4"), glow = hex("#b54bff") },
   { min = 200, name = "Legendary", cloth = hex("#d06000"), glow = hex("#ff8a10") },
+  { min = 300, name = "Mythic", cloth = hex("#b3151b"), glow = hex("#ff3b30") },
+  -- x1000: the counter cycles through the hues; these are the colours shown at rest
+  { min = 1000, name = "Rainbow", cloth = hex("#c040c0"), glow = hex("#ff7ad9"), rainbow = true },
 }
 
 Tiers.TRIM_MID = 10
@@ -26,7 +29,8 @@ Tiers.TRIM_SIDE = 20
 Tiers.OUTLINE_UPTO = 6
 Tiers.DEPTH = 4
 Tiers.STAGES = { [5] = true, [10] = true, [20] = true }
-Tiers.ORNAMENTS = { 75, 150, 300 }   -- corner curls, crest + pendant, wings
+-- gold ornaments: corner curls, crest + pendant, wings, runs + sapphires, emeralds + diamonds, crown
+Tiers.ORNAMENTS = { 75, 150, 350, 400, 500, 750 }
 
 local WHITE, BLACK = { 1, 1, 1 }, { 0, 0, 0 }
 
@@ -52,9 +56,25 @@ function Tiers.growth(n)
   return 1 + math.min(0.001 * n, 3.0)
 end
 
--- Number of stacked effects: x25 shine, x50 lightning, x100 sparks, x200 rays.
+-- Number of stacked effects: x25 shine, x50 lightning, x100 sparks, x200 rays (4 at most).
 function Tiers.effects(n)
-  return Tiers.index(n) - 1
+  return math.min(4, Tiers.index(n) - 1)
+end
+
+-- An RGB colour from a hue (0..1), saturation and value.
+function Tiers.hsv(h, sat, v)
+  local i = math.floor(h * 6) % 6
+  local f = h * 6 - math.floor(h * 6)
+  local p, q, t = v * (1 - sat), v * (1 - f * sat), v * (1 - (1 - f) * sat)
+  if i == 0 then return { v, t, p } elseif i == 1 then return { q, v, p } elseif i == 2 then return { p, v, t }
+  elseif i == 3 then return { p, q, v } elseif i == 4 then return { t, p, v } end
+  return { v, p, q }
+end
+
+-- Rainbow colours at time t: cloth and glow, slowly cycling.
+function Tiers.rainbowAt(t)
+  local h = (t * 0.12) % 1
+  return Tiers.hsv(h, 0.85, 0.8), Tiers.hsv(h, 0.65, 1)
 end
 
 -- Number of gold ornament groups on the frame.
@@ -87,7 +107,8 @@ function Tiers.look(n)
     trimMid = n >= Tiers.TRIM_MID,
     trimSide = n >= Tiers.TRIM_SIDE,
     extruded = n > Tiers.OUTLINE_UPTO,
-    effects = i - 1,
+    effects = math.min(4, i - 1),
+    rainbow = tier.rainbow or false,
     ornaments = Tiers.ornaments(n),
     scale = Tiers.growth(n),
   }

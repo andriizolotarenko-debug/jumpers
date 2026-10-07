@@ -188,6 +188,7 @@ function StatsTab.Build(page)
   ns.On("JUMP", function() if page:IsVisible() then StatsTab.Refresh() end end)
   ns.On("STREAK_END", function() if page:IsVisible() then StatsTab.Refresh() end end)
   ns.On("SETTINGS", function(key) if key == "units" and page:IsVisible() then StatsTab.Refresh() end end)
+  ns.On("STATS_RESET", function() if page:IsVisible() then StatsTab.Refresh() end end)
 end
 
 local function setWho()
@@ -255,9 +256,20 @@ function StatsTab.Refresh()
   }
   for i = 1, 5 do
     local n = bests[i]
-    local c = tierColor(n)
-    ui.best[i]:SetText(n > 0 and ("x" .. n) or "-")
-    ui.best[i]:SetTextColor(c[1], c[2], c[3])
+    if n >= 1000 then
+      -- rainbow tier: one hue per character
+      local text, str = "", "x" .. n
+      for j = 1, #str do
+        local c = ns.Tiers.hsv((j - 1) / #str, 0.6, 1)
+        text = text .. string.format("|cff%02x%02x%02x%s|r", c[1] * 255, c[2] * 255, c[3] * 255, str:sub(j, j))
+      end
+      ui.best[i]:SetText(text)
+      ui.best[i]:SetTextColor(1, 1, 1)
+    else
+      local c = tierColor(n)
+      ui.best[i]:SetText(n > 0 and ("x" .. n) or "-")
+      ui.best[i]:SetTextColor(c[1], c[2], c[3])
+    end
   end
 
   if ui.arrow.SetRotation then ui.arrow:SetRotation(listOpen and -math.pi / 2 or 0) end

@@ -332,30 +332,85 @@ def gilded(name, w, h, lines, fills=(), canvas=None):
 
 
 def ornaments():
-    # corner curl, 18 x 18 UI px; its root (bottom-right) sits on the band's top-left corner
-    curl = [(16, 16), (11, 11), (8, 8.5)] + spiral(6, 6.5, 3.2, 0.6, math.radians(60), 1.15)
-    leaf = [(13.5, 13.5), (15.5, 9), (12, 11)]
-    gilded("orn_corner", 18, 18, [(curl, 1.7)], fills=[leaf], canvas=(128, 128))
-    # crest, 48 x 20 UI px; bottom edge sits on the band's top edge
+    # x75 corner curl, 12 x 12 UI px; its root (bottom-right) sits on the band's top-left corner
+    curl = [(11, 11), (8, 8)] + spiral(5.2, 5.5, 2.4, 0.5, math.radians(60), 1.1)
+    leaf = [(9.6, 9.6), (11.2, 6.6), (8.6, 8.2)]
+    gilded("orn_corner", 12, 12, [(curl, 1.5)], fills=[leaf], canvas=(64, 64))
+    # x150 crest, 48 x 20 UI px; bottom edge sits on the band's top edge
     lines = []
     for sgn in (-1, 1):
         cx = 24
         pts = quad((cx + sgn * 4, 15.5), (cx + sgn * 12, 18), (cx + sgn * 16, 13))
-        pts += spiral(cx + sgn * 16.5, 10.2, 2.8, 0.5, math.radians(90 if sgn < 0 else 90), 1.0 * sgn)[1:]
+        pts += spiral(cx + sgn * 16.5, 10.2, 2.8, 0.5, math.radians(90), 1.0 * sgn)[1:]
         lines.append((pts, 1.6))
         lines.append((quad((cx + sgn * 3, 12), (cx + sgn * 8, 6), (cx + sgn * 12, 6.5)), 1.2))
     diamond = [(24, 4), (29, 11), (24, 18), (19, 11)]
     ball = spiral(24, 2.4, 1.2, 1.2, 0, 1, steps=16)
     gilded("orn_crest", 48, 20, lines, fills=[diamond, ball], canvas=(256, 128))
-    # wing, 36 x 32 UI px; its root (right middle) touches the tail tip
+    # x350 wing, 26 x 24 UI px; its root (right middle) touches the tail tip
     lines = []
-    for end, ctrl, curl_r in (((5, 5), (22, 3), 2.6), ((2, 16), (18, 13), 2.2), ((6, 27), (20, 29), 2.0)):
-        pts = quad((34, 16), ctrl, end)
+    for end, ctrl, curl_r in (((9, 4), (18, 3), 1.9), ((5, 12), (15, 10.5), 1.7), ((9, 20), (18, 21), 1.6)):
+        pts = quad((25, 12), ctrl, end)
         a0 = math.atan2(pts[-1][1] - pts[-2][1], pts[-1][0] - pts[-2][0])
         pts += spiral(end[0] + math.cos(a0 + math.pi / 2) * curl_r, end[1] + math.sin(a0 + math.pi / 2) * curl_r,
                       curl_r, 0.4, a0 - math.pi / 2, -0.9)[1:]
-        lines.append((pts, 1.7))
-    gilded("orn_wing", 36, 32, lines, canvas=(256, 128))
+        lines.append((pts, 1.5))
+    gilded("orn_wing", 26, 24, lines, canvas=(128, 128))
+    # x400 run: a filigree strip along the trim, 24 x 8 UI px, bottom edge on the trim
+    wave = [(1 + i * 0.5, 5.2 - math.sin(i * 0.5 / 22 * 2 * math.pi) * 1.6) for i in range(45)]
+    lines = [(wave, 1.2)]
+    lines.append((spiral(4.5, 3.4, 1.7, 0.4, math.radians(200), -0.9), 1.0))
+    lines.append((spiral(19.5, 3.0, 1.7, 0.4, math.radians(-20), 0.9), 1.0))
+    gilded("orn_run", 24, 8, lines, fills=[spiral(12, 4.2, 1.1, 1.1, 0, 1, steps=12)], canvas=(128, 32))
+    # x750 crown, 52 x 28 UI px; bottom edge sits on the band's top edge
+    crown = [(3, 26), (4, 13), (13, 19), (26, 3), (39, 19), (48, 13), (49, 26)]
+    gilded("orn_crown", 52, 28, [([(3, 22), (49, 22)], 1.4)], fills=[crown], canvas=(256, 128))
+    gem()
+
+
+def gem():
+    """A faceted stone in greys (tinted in game) and its gold setting."""
+    S = 64 * SS
+    c, R = S / 2, S / 2 - 6 * SS
+    oct_ = [(c + math.cos(math.radians(22.5 + i * 45)) * R, c + math.sin(math.radians(22.5 + i * 45)) * R) for i in range(8)]
+    inner = [(c + (x - c) * 0.5, c + (y - c) * 0.5 - 0.06 * S) for x, y in oct_]
+    im = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    shades = [235, 200, 150, 110, 90, 120, 170, 215]
+    for i in range(8):
+        a, b = oct_[i], oct_[(i + 1) % 8]
+        ia, ib = inner[i], inner[(i + 1) % 8]
+        v = shades[i]
+        d.polygon([a, b, ib, ia], fill=(v, v, v, 255))
+    d.polygon(inner, fill=(245, 245, 245, 255))
+    d.ellipse((c - 0.32 * S, c - 0.36 * S, c - 0.12 * S, c - 0.2 * S), fill=(255, 255, 255, 255))
+    save(im.resize((64, 64), Image.LANCZOS), "gem")
+    ring = Image.new("L", (S, S), 0)
+    rd = ImageDraw.Draw(ring)
+    big = [(c + (x - c) * 1.18, c + (y - c) * 1.18) for x, y in oct_]
+    rd.polygon(big, fill=255)
+    rd.polygon(oct_, fill=0)
+    rim = Image.new("L", (S, S), 0)
+    ImageDraw.Draw(rim).polygon([(c + (x - c) * 1.3, c + (y - c) * 1.3) for x, y in oct_], fill=255)
+    grad = np.zeros((S, S, 4), np.uint8)
+    for y in range(S):
+        grad[y, :, :3] = gold_at(y / S)
+        grad[y, :, 3] = 255
+    g = Image.fromarray(grad)
+    g.putalpha(ring)
+    out = Image.new("RGBA", (S, S), RIM + (0,))
+    out.putalpha(rim)
+    out = Image.alpha_composite(out, g)
+    save(out.resize((64, 64), Image.LANCZOS), "gem_set")
+
+
+def rainbow():
+    """Tileable hue strip, multiplied over the grey band at x1000."""
+    import colorsys
+    w = 256
+    row = np.array([colorsys.hsv_to_rgb(i / w, 0.8, 1.0) for i in range(w)]) * 255
+    a = np.dstack([np.tile(row[:, c], (8, 1)) for c in range(3)] + [np.full((8, w), 255)]).astype(np.uint8)
+    save(Image.fromarray(a), "rainbow")
 
 
 # ---------- small icon: minimap button and the AddOns list ----------
@@ -408,4 +463,5 @@ if __name__ == "__main__":
     icon()
     icon_small()
     ornaments()
+    rainbow()
     print("ok")

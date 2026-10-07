@@ -89,6 +89,15 @@ local function initDB()
   ns.Settings.Init(JumpersDB.settings)
 end
 
+-- Wipes character and account stats (the Settings tab's test button).
+function ns.ResetProgress()
+  JumpersDB.stats = ns.Stats.new()
+  JumpersCharDB.stats = ns.Stats.new()
+  ns.account = JumpersDB.stats
+  ns.char = JumpersCharDB.stats
+  ns.Fire("STATS_RESET")
+end
+
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_LOGIN")

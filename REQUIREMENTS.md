@@ -67,6 +67,8 @@ The approved visual design, with exact values, is in [UI-SPEC.md](UI-SPEC.md).
   | x50 | Blue (rare) |
   | x100 | Purple (epic) |
   | x200 | Orange (legendary) |
+| x300 | Red (mythic) |
+| x1000 | Rainbow, cycling through the hues |
 
 - **R2.6** Four stacking effects, one added at each tier from green upward:
   - x25 shine
@@ -75,7 +77,8 @@ The approved visual design, with exact values, is in [UI-SPEC.md](UI-SPEC.md).
   - x200 rays
 - **R2.6a** Every 10th jump without a bigger moment gets a small spark pulse. From x75 the
   gold frame gains ornaments: corner curls at x75, a crest and pendant at x150, wings at
-  x300.
+  x350, filigree runs and sapphires at x400, emeralds and diamonds at x500, a jewelled
+  crown at x750.
 - **R2.7** Size growth: **+0.1% per jump** from the first one (x100 = +10%,
   x1000 = +100%). Capped at **+300%** (reached at x3000). At the end it should be
   genuinely big.
@@ -177,7 +180,8 @@ peer-to-peer over addon messages.
   | Minimap button | shown |
 
   A live counter preview sits next to the size setting.
-- **R6.4** v1 is English only. No stats reset in v1.
+- **R6.4** v1 is English only. Settings end with a "Reset progress" button (with a
+  confirmation) that clears character and account stats, mainly for testing.
 
 ## 7. Distribution
 

@@ -67,6 +67,8 @@ edge, with 5 px to the count. The band runs 12 px past the count.
 | x50 | Rare | `#0b5cbf` | `#2b8cff` |
 | x100 | Epic | `#7f30c4` | `#b54bff` |
 | x200 | Legendary | `#d06000` | `#ff8a10` |
+| x300 | Mythic | `#b3151b` | `#ff3b30` |
+| x1000 | Rainbow | hue cycles (period ~8 s) | hue cycles |
 
 Tier-up (R2.8):
 - A pop (amplitude 0.45, 0.32 s).
@@ -85,6 +87,11 @@ Tier-up (R2.8):
 
 Effects use the current tier's glow colour.
 
+**Rainbow (x1000):** a tileable hue strip is multiplied over the grey band and scrolls
+slowly along it. The tails, the extrusion, the face tint and every effect follow one
+hue that cycles through the spectrum (cloth `hsv(h, 0.85, 0.8)`, glow `hsv(h, 0.65, 1)`).
+In Personal Stats a best streak of x1000+ is printed one hue per character.
+
 ## Every tenth jump
 
 Every 10th jump that has no bigger moment of its own (not x10, x20, a tier or an
@@ -94,21 +101,25 @@ ornament) gets a small pulse:
   edges of the band and fade within ~0.4–0.8 s;
 - the tick sound.
 
-## Gold ornaments (x75, x150, x300)
+## Gold ornaments (x75 – x750)
 
-Past the last colour the frame keeps getting richer. Each group snaps on with a pop
+Past the last effects the frame keeps getting richer. Each group snaps on with a pop
 (amplitude 0.35, 0.26 s), grows in from 170% to full size over 0.3 s, flashes the trim,
 bursts gold sparks from its pieces and plays the milestone sound. They stay for the rest
 of the streak and fade with the ribbon.
 
 | From | Ornament | Pieces |
 |---|---|---|
-| x75 | Corner curls | A gold scroll with a leaf at each corner of the band, 18 × 18 |
+| x75 | Corner curls | A short gold scroll with a leaf at each corner of the band, 12 × 12 |
 | x150 | Crest and pendant | A diamond with a ball and two scrolls on top of the band, mirrored below it, 48 × 20 |
-| x300 | Wings | Three sweeping filigree strokes with curled ends out past each tail, 36 × 32 |
+| x350 | Wings | Three short filigree strokes with curled ends past each tail, 26 × 24 |
+| x400 | Runs and sapphires | Filigree strips along the top and bottom trim (24 × 8, four), a sapphire set in the crest and the pendant |
+| x500 | Emeralds and diamonds | An emerald on each corner curl, a small diamond on each run |
+| x750 | Crown | A crown replaces the top crest: rubies on its three points, a sapphire in its band |
 
-Drawn like the trim: gold gradient `#ffe7a0 → #d9a640 → #9c6a1c` with a dark rim. With
-the crest on, the NEW BEST plaque sits 9 px higher.
+Drawn like the trim: gold gradient `#ffe7a0 → #d9a640 → #9c6a1c` with a dark rim. Gems are
+a faceted stone in greys, tinted per gem (sapphire, emerald, ruby, diamond), in a gold
+setting. With the crest on, the NEW BEST plaque sits 9 px higher; with the crown, 22 px.
 
 ## Size growth (R2.7)
 
@@ -157,7 +168,9 @@ from the sources in `art/`:
 | `caption_band.tga`, `line.tga` | Milestone caption band and its gold lines |
 | `icon.tga`, `icon_round.tga` | Addon icon: window portrait, leaderboard notice |
 | `icon_small.tga` | Minimap button and AddOns list: a big gold jumper on blue, readable at 16 px |
-| `orn_corner.tga`, `orn_crest.tga`, `orn_wing.tga` | Gold ornaments, untinted |
+| `orn_corner.tga`, `orn_crest.tga`, `orn_wing.tga`, `orn_run.tga`, `orn_crown.tga` | Gold ornaments, untinted |
+| `gem.tga`, `gem_set.tga` | Gem stone (tinted per gem) and its gold setting |
+| `rainbow.tga` | Hue strip multiplied over the band at x1000 |
 | `ChangaOne-Italic.ttf` + `OFL.txt` | Count font and its licence |
 
 Sounds are the addon's own short synthesised OGG files in `media/sounds/`. `PlaySoundFile`
@@ -234,6 +247,8 @@ setting picks one (the slider moves in 25 % steps):
   - Counter group (show, size slider with steppers, unlock + reset, reduced effects),
     with a live preview of the counter beside it and a "Play sample streak" button.
   - Sound volume slider ("Off" at 0%).
+  - Progress: a "Reset progress" button (with a confirmation) that clears character and
+    account stats. Meant for testing.
   - Metres / Feet toggle.
   - Minimap button checkbox.
 - **Minimap button:**
