@@ -140,7 +140,9 @@ end
 SLASH_JUMPERS1 = "/jumpers"
 SlashCmdList.JUMPERS = function(msg)
   msg = (msg or ""):lower():match("^%s*(.-)%s*$")
-  if msg == "demo" then
+  if msg == "demoboard" then
+    ns.BoardTab.ToggleDemo()
+  elseif msg == "demo" then
     ns.Demo(60)
   elseif msg:match("^demo %d+$") then
     ns.Demo(tonumber(msg:match("%d+")))

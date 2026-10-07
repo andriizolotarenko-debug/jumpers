@@ -245,10 +245,13 @@ setting picks one (the slider moves in 25 % steps):
 - **Leaderboard:**
   - Title "Best single streak", the realm and how many players with Jumpers are online.
   - Period switch Today / 7 days / 30 days / Year, and a "Players online" checkbox.
-  - A card with up to 50 rows: rank (top 3 in gold, silver, bronze), player in class
-    colour with a green dot when online (own realm without the suffix), best streak in its
-    tier colour, and when it was set ("12 min ago", "3 h ago", "yesterday", "Oct 07").
+  - A card with up to 50 rows: rank in Changa One (top 3 in gold, silver, bronze), player
+    in class colour with a green dot when online (own realm without the suffix), the best
+    streak as a small copy of the counter's ribbon (band 16 px, tails and folds, gold
+    trim, tier colour, rainbow from x1000), and when it was set ("12 min ago", "3 h ago", "yesterday", "Oct 07").
   - Your own row highlighted in gold. Wheel scrolls the list.
+  - `/jumpers demoboard` toggles a sample board of made-up players for store screenshots.
+    It is only drawn, never stored or sent.
   - An empty state, and a footer saying how records are shared (guild, channel) and that
     relayed records stay hidden until two players confirm them.
 - **Settings** (R6.3):

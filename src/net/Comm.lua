@@ -58,6 +58,7 @@ end
 function Comm.Short(player)
   local realm = "-" .. myRealm()
   if player:sub(-#realm) == realm then return player:sub(1, -#realm - 1) end
+  if player:sub(-5) == "-Demo" then return player:sub(1, -6) end   -- the screenshot sample board
   return player
 end
 

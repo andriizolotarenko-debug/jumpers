@@ -5,7 +5,7 @@ local BoardTab = {}
 ns.BoardTab = BoardTab
 
 local W = 600
-local ROW = 22
+local ROW = 26
 local MAX_ROWS = 50
 local COLS = { rank = 14, player = 52, best = 420, when = W - 16 }
 local DOT = "|TInterface\\FriendsFrame\\StatusIcon-Online:10:10:0:0|t"
@@ -19,7 +19,136 @@ local MEDALS = { { 1, 0.82, 0.2 }, { 0.85, 0.88, 0.92 }, { 0.85, 0.55, 0.3 } }
 
 local period = 1
 local onlineOnly = false
+local demo = false
 local ui = {}
+
+-- ---------- streak badge: a small copy of the counter's ribbon ----------
+
+local M = ns.MEDIA
+local BH = 16                           -- band height
+local K = BH / 28                       -- scale against the counter's 28 px band
+local B0 = 0.75
+local GOLD_TOP, GOLD_BOTTOM = { 1, 0.906, 0.627 }, { 0.612, 0.416, 0.11 }
+
+local function badge(parent)
+  local b = CreateFrame("Frame", nil, parent)
+  b:SetSize(1, BH)
+  b.tails = {}
+  for i = 1, 2 do
+    local t = b:CreateTexture(nil, "ARTWORK", nil, 0)
+    t:SetTexture(M .. "ribbon_side")
+    if i == 1 then t:SetTexCoord(0, 160 / 256, 0, 144 / 256) else t:SetTexCoord(160 / 256, 0, 0, 144 / 256) end
+    t:SetSize(40 * K, 36 * K)
+    local trim = b:CreateTexture(nil, "ARTWORK", nil, 1)
+    trim:SetTexture(M .. "ribbon_trim_side")
+    if i == 1 then trim:SetTexCoord(0, 160 / 256, 0, 144 / 256) else trim:SetTexCoord(160 / 256, 0, 0, 144 / 256) end
+    trim:SetSize(40 * K, 36 * K)
+    b.tails[i] = { t, trim }
+  end
+  b.tails[1][1]:SetPoint("CENTER", b, "LEFT", -6 * K, -6 * K)
+  b.tails[1][2]:SetPoint("CENTER", b, "LEFT", -6 * K, -6 * K)
+  b.tails[2][1]:SetPoint("CENTER", b, "RIGHT", 6 * K, -6 * K)
+  b.tails[2][2]:SetPoint("CENTER", b, "RIGHT", 6 * K, -6 * K)
+  b.band = b:CreateTexture(nil, "ARTWORK", nil, 2)
+  b.band:SetTexture(M .. "ribbon_mid", "REPEAT", "CLAMP")
+  b.band:SetAllPoints()
+  b.rainbow = b:CreateTexture(nil, "ARTWORK", nil, 3)
+  b.rainbow:SetTexture(M .. "rainbow", "REPEAT", "CLAMP")
+  b.rainbow:SetBlendMode("MOD")
+  b.rainbow:SetAllPoints()
+  -- trim: dark rim + gold line on all four edges
+  for _, spec in ipairs({ { "TOP", GOLD_TOP }, { "BOTTOM", GOLD_BOTTOM } }) do
+    local rim = b:CreateTexture(nil, "ARTWORK", nil, 4)
+    rim:SetColorTexture(0.1, 0.067, 0.027, 1)
+    rim:SetPoint(spec[1] .. "LEFT", -1, spec[1] == "TOP" and 1 or -1)
+    rim:SetPoint(spec[1] .. "RIGHT", 1, spec[1] == "TOP" and 1 or -1)
+    rim:SetHeight(2.2)
+    local g = b:CreateTexture(nil, "ARTWORK", nil, 5)
+    g:SetColorTexture(spec[2][1], spec[2][2], spec[2][3], 1)
+    g:SetPoint(spec[1] .. "LEFT", 0, spec[1] == "TOP" and 0.5 or -0.5)
+    g:SetPoint(spec[1] .. "RIGHT", 0, spec[1] == "TOP" and 0.5 or -0.5)
+    g:SetHeight(1)
+  end
+  for _, side in ipairs({ "LEFT", "RIGHT" }) do
+    local rim = b:CreateTexture(nil, "ARTWORK", nil, 4)
+    rim:SetColorTexture(0.1, 0.067, 0.027, 1)
+    rim:SetPoint("TOP" .. side, side == "LEFT" and -1 or 1, 1)
+    rim:SetPoint("BOTTOM" .. side, side == "LEFT" and -1 or 1, -1)
+    rim:SetWidth(2.2)
+    local g = b:CreateTexture(nil, "ARTWORK", nil, 5)
+    g:SetColorTexture(0.85, 0.65, 0.25, 1)
+    g:SetPoint("TOP" .. side, side == "LEFT" and -0.5 or 0.5, 0.5)
+    g:SetPoint("BOTTOM" .. side, side == "LEFT" and -0.5 or 0.5, -0.5)
+    g:SetWidth(1)
+  end
+  b.text = b:CreateFontString(nil, "OVERLAY")
+  b.text:SetFont(ns.FONT, 14, "")
+  if not b.text:GetFont() then b.text:SetFont(STANDARD_TEXT_FONT, 13, "") end
+  b.text:SetShadowOffset(1, -1)
+  b.text:SetShadowColor(0, 0, 0, 1)
+  b.text:SetPoint("CENTER", b, "CENTER", 0, 0.5)
+  return b
+end
+
+local function setBadge(b, n)
+  local look = ns.Tiers.look(n)
+  local digits = #tostring(n)
+  local w = (0.54 + 0.6 * digits) * 14 + 16
+  b:SetWidth(w)
+  b.band:SetTexCoord(0, w / (BH / 28 * 32), 0, 28 / 32)
+  b.rainbow:SetTexCoord(0, w / 60, 0, 1)
+  b.rainbow:SetShown(look.rainbow)
+  local c = look.cloth
+  local tint = { math.min(1, c[1] / B0), math.min(1, c[2] / B0), math.min(1, c[3] / B0) }
+  if look.rainbow then b.band:SetVertexColor(1, 1, 1) else b.band:SetVertexColor(tint[1], tint[2], tint[3]) end
+  local side = look.rainbow and ns.Tiers.hsv(0.8, 0.7, 0.85) or tint
+  for i = 1, 2 do b.tails[i][1]:SetVertexColor(side[1], side[2], side[3]) end
+  local f = look.face
+  b.text:SetText("x" .. n)
+  b.text:SetTextColor(f[1], f[2], f[3])
+end
+
+-- ---------- sample board for screenshots (/jumpers demoboard): shown only, never stored ----------
+
+local DEMO = {
+  { "Velaria", "DRUID", 1240, 380, true }, { "Grimtusk", "WARRIOR", 812, 1500, true },
+  { "Moonwhisper", "PRIEST", 455, 3100 }, { "Kazgrim", "SHAMAN", 318, 5200, true },
+  { "Elyndra", "MAGE", 262, 7400 }, { "Brokkar", "PALADIN", 214, 9800, true },
+  { "Sylvaris", "HUNTER", 187, 12500 }, { "Faeliss", "ROGUE", 142, 15800, true },
+  { "Dornak", "WARLOCK", 120, 21000 }, { "Lunarae", "DRUID", 96, 26500 },
+  { "Hrothgar", "WARRIOR", 77, 31000, true }, { "Tiriwen", "PRIEST", 61, 36500 },
+  { "Morghul", "WARLOCK", 49, 41000 }, { "Aethelyn", "PALADIN", 38, 47000, true },
+  { "Quillon", "HUNTER", 27, 52000 }, { "Zarethis", "MAGE", 19, 60000 },
+}
+
+local function demoList()
+  local now = GetServerTime and GetServerTime() or time()
+  local list, online = {}, {}
+  local me = ns.Comm.Me()
+  local mine = me and { p = me, c = select(2, UnitClass("player")), n = 233, e = now - 600 }
+  local scale = period == 1 and 1 or (period == 7 and 1.15 or (period == 30 and 1.3 or 1.6))
+  for i, d in ipairs(DEMO) do
+    local p = d[1] .. "-Demo"
+    local n = math.floor(d[3] * (i % 3 == 0 and scale or 1))
+    list[#list + 1] = { p = p, c = d[2], n = n, e = now - d[4] * (period == 1 and 1 or 3) }
+    if d[5] then online[p] = true end
+  end
+  if mine then list[#list + 1] = mine; online[me] = true end
+  table.sort(list, function(a, b) return a.n > b.n end)
+  if onlineOnly then
+    local only = {}
+    for _, r in ipairs(list) do if online[r.p] then only[#only + 1] = r end end
+    list = only
+  end
+  return list, online
+end
+
+function BoardTab.ToggleDemo()
+  demo = not demo
+  ns.Window.Show("board")
+  BoardTab.Refresh()
+  ns.Print(demo and "sample leaderboard on (for screenshots, nothing is stored)" or "sample leaderboard off")
+end
 
 local function at(region, parent, x, y)
   region:ClearAllPoints()
@@ -66,14 +195,14 @@ local function buildRows(card)
     row.mine = row:CreateTexture(nil, "BACKGROUND", nil, 1)
     row.mine:SetAllPoints()
     row.mine:SetColorTexture(1, 0.82, 0.2, 0.14)
-    row.rank = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    row.rank = ns.Window.Number(row, 15)
     row.rank:SetPoint("LEFT", COLS.rank, 0)
     row.rank:SetWidth(30)
     row.rank:SetJustifyH("LEFT")
     row.name = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
     row.name:SetPoint("LEFT", COLS.player, 0)
-    row.best = ns.Window.Number(row, 17)
-    row.best:SetPoint("RIGHT", row, "LEFT", COLS.best, 0)
+    row.best = badge(row)
+    row.best:SetPoint("RIGHT", row, "LEFT", COLS.best - 10, 1)
     row.when = ns.Window.Note(row)
     row.when:SetPoint("RIGHT", row, "LEFT", COLS.when, 0)
     row:Hide()
@@ -133,6 +262,7 @@ function BoardTab.Refresh()
   local today = ns.Today()
   local online = ns.Comm.Online()
   local list = ns.Board.top(ns.board, today, period, onlineOnly and online or nil)
+  if demo then list, online = demoList() end
   local me = ns.Comm.Me()
   ui.period:Select(period)
   ui.online:SetChecked(onlineOnly)
@@ -151,9 +281,7 @@ function BoardTab.Refresh()
       if medal then row.rank:SetTextColor(medal[1], medal[2], medal[3]) else row.rank:SetTextColor(0.6, 0.6, 0.6) end
       row.name:SetText(ns.Comm.Short(r.p) .. (online[r.p] and (" " .. DOT) or ""))
       row.name:SetTextColor(classColor(r.c))
-      local g = ns.Tiers.look(r.n).glow
-      row.best:SetText("x" .. r.n)
-      row.best:SetTextColor(g[1], g[2], g[3])
+      setBadge(row.best, r.n)
       row.when:SetText(ago(r.e))
       row.mine:SetShown(r.p == me)
     end
