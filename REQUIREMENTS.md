@@ -15,9 +15,10 @@ leaderboard.
   current streak. If 3 s pass with no counted jump, the streak ends and is recorded.
 - **R1.2** The 3 s window is fixed for everyone. Not configurable.
 - **R1.3** Only *moving* jumps count. A jump counts only if the character moved at some
-  point since the previous jump (non-zero movement between jumps). Brief stops, such as
-  bumping into an obstacle, do not break the streak. A jump with no movement since the
-  previous one is ignored. It does not extend the streak and does not reset the window.
+  point since the previous jump. Brief stops, such as bumping into an obstacle, do not
+  break the streak. A jump with no movement since the previous one is ignored. It does
+  not extend the streak and does not reset the window.
+  - Movement = a change of position **or a turn** (change of facing).
   - Movement is the character's own movement. Standing still on a moving ship is not
     movement.
 - **R1.4** Contexts:
@@ -55,10 +56,11 @@ leaderboard.
   | x100 | Purple (epic) |
   | x200 | Orange (legendary) |
 
-- **R2.6** Above x200, every +100 jumps (x300, x400…) grows the counter by **5%**.
-- **R2.7** From blue onwards, extra effects stack on: one at x50, then one more every
-  100 jumps (x100, x200, x300…). Examples: sparks, glow, flames, lightning, orbiting
-  stars, trail.
+- **R2.6** Four stacking effects, one added at each tier from green upward:
+  x25, x50, x100, x200. Examples: sparks, glow, flames, lightning.
+- **R2.7** Size growth: every 100 jumps grows the counter by **+10%** of its base size,
+  starting at x100 (x100 = +10%, x200 = +20%…). Capped at **+300%** (reached at x3000).
+  At the end it should be genuinely big.
 - **R2.8** Each tier change plays a short animation and sound.
 
 ## 3. Personal statistics
@@ -84,10 +86,14 @@ leaderboard.
 
 - **R4.1** Ranked by **best single streak (jumps)** within the timeframe.
 - **R4.2** Timeframes: **Today**, **Last 7 days**, **Last 30 days**, **Last year**.
-  Based on server time, so it is the same for everyone.
+  "Today" is the **realm's calendar day**. All timeframes use realm time, so they are
+  the same for everyone.
 - **R4.3** Scope: every player who has the addon installed. Limited by the game to
   players reachable by in-game addon messaging (same realm / connected realms).
 - **R4.4** Trust model: **trust the addon, not the player.** See §5.
+- **R4.5** **Players Online** filter: shows only players currently online, meaning heard
+  from within the last 10 minutes. Every addon sends a small "I'm here + my bests"
+  heartbeat every ~5 minutes. All data in this view is first-hand and live.
 
 ## 5. Integrity (anti-cheat)
 
@@ -104,8 +110,15 @@ peer-to-peer over addon messages.
   - minimum time per jump (physical jump cycle)
   - streak duration consistent with its length
   - timestamps consistent with server time
-- **R5.4** Records relayed second-hand, needed to sync history for players who were
-  offline, are accepted only when confirmed by several independent peers (quorum).
+- **R5.4** Decentralised sync. Each addon keeps its own copy of the leaderboard. On
+  login, and periodically, it asks online peers for their top records and merges them.
+  This fills in records set while you were offline.
+  - Such second-hand records are accepted as **confirmed** only when several independent
+    peers report the same record (quorum).
+  - With nobody online, you see your local copy: your own records plus what you saw
+    before. It syncs when others come online.
+  - To keep traffic small, only each timeframe's top N records are synced, never the full
+    history. Messages are throttled.
 - **R5.5** Known residual risk: a modified addon, or external key automation, can still
   produce fake or farmed streaks. Without a server this cannot be fully prevented. The
   checks above aim to raise the cost of cheating, not to make it impossible.
@@ -119,9 +132,11 @@ peer-to-peer over addon messages.
 
 ## Open questions
 
-1. Counter size growth: cap it (for example at +50%), so it never covers the screen?
-2. Effects list (R2.7): the pool is finite. When it runs out, intensify existing
-   effects or cycle them?
-3. Does holding the jump key re-jump continuously on the Forever client, and does it
-   fire the jump hook each time? Verify in-game. Affects detection and farming (R5.5).
-4. Is "Today" the realm's calendar day (server time) or UTC?
+1. Records that have not reached quorum yet: hide them, or show them marked
+   "unconfirmed"? Quorum size: 2 or 3 peers?
+2. Players Online: is "heard within the last 10 minutes" acceptable?
+3. Verify in-game: does holding the jump key re-jump continuously on the Forever client,
+   and does it fire the jump hook each time? Affects detection and farming (R5.5).
+4. Verify in-game: is the character's facing readable inside dungeons and raids? On the
+   modern client it is restricted there. If not, turning cannot be detected in instances,
+   so movement there falls back to position change only.
