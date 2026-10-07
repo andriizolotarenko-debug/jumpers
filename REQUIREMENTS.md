@@ -123,8 +123,7 @@ peer-to-peer over addon messages.
   This fills in records set while you were offline.
   - Such second-hand records are accepted as **confirmed** only when at least
     **2 independent peers** report the same record (quorum).
-  - Until then they are shown marked **"unconfirmed"**, so boards on quiet realms are
-    not empty.
+  - Until then they are **not shown** at all.
   - With nobody online, you see your local copy: your own records plus what you saw
     before. It syncs when others come online.
   - To keep traffic small, only each timeframe's top N records are synced, never the full
@@ -142,5 +141,5 @@ peer-to-peer over addon messages.
 
 ## Open questions
 
-None. Defaults adopted on 2026-10-07: unconfirmed records are shown with a mark,
+None. Defaults adopted on 2026-10-07: unconfirmed records are hidden,
 quorum = 2 peers, "online" = heard within the last 10 minutes.
