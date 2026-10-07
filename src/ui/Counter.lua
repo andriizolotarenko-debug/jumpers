@@ -714,7 +714,8 @@ function Counter:Update(now, elapsed)
   self.sides:SetAlpha(look.sides * flag)
   self.mid:SetAlpha(look.mid * flag)
   self.core:SetAlpha(look.core)
-  local effects = self.reduced and 0 or look.effects
+  -- reduced effects keep the colours and the x25 shine, and drop lightning, sparks and rays
+  local effects = self.reduced and math.min(look.effects, 1) or look.effects
   updateEffects(self, now, effects, flag)
   updateBursts(self, now)
 end

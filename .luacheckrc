@@ -15,7 +15,7 @@ read_globals = {
   "GetPlayerFacing", "GetTime", "HasFullControl", "HideUIPanel", "InterfaceOptions_AddCategory",
   "IsFalling", "IsFlying", "IsPlayerMoving", "IsSwimming", "JumpOrAscendStart", "LibStub",
   "PanelTemplates_SetNumTabs", "PanelTemplates_SetTab", "PanelTemplates_TabResize", "PlaySoundFile",
-  "STANDARD_TEXT_FONT", "Settings", "SettingsPanel", "UIParent", "UnitOnTaxi", "date", "geterrorhandler",
+  "STANDARD_TEXT_FONT", "Settings", "UnitName", "UnitLevel", "SettingsPanel", "UIParent", "UnitOnTaxi", "date", "geterrorhandler",
   "hooksecurefunc", "issecretvalue", "tinsert", "unpack", "wipe",
 }
 

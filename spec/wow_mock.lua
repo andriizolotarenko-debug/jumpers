@@ -103,6 +103,9 @@ function Object:StartMoving() end
 function Object:StopMovingOrSizing() end
 function Object:Cancel() self.cancelled = true end
 function Object:SetID(id) self.id = id end
+function Object:GetVerticalScroll() return self.vscroll or 0 end
+function Object:SetVerticalScroll(v) assert(type(v) == "number"); self.vscroll = v end
+function Object:GetStatusBarTexture() self.sbt = self.sbt or new("Texture", self); return self.sbt end
 
 local function install()
   _G.CreateFrame = function(kind, name, parent, template)
@@ -140,6 +143,8 @@ local function install()
   _G.IsPlayerMoving = function() return Mock.moving end
   _G.GetPlayerFacing = function() return Mock.facing or 0 end
   _G.GetCurrentRegion = function() return 3 end
+  _G.UnitName = function() return "Tester" end
+  _G.UnitLevel = function() return 12 end
   _G.GetCVar = function() return "eu" end
   _G.PlaySoundFile = function(path, channel)
     assert(path:match("%.ogg$") and channel == "SFX")

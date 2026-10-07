@@ -4,6 +4,10 @@ local _, ns = ...
 local SettingsTab = {}
 ns.SettingsTab = SettingsTab
 
+local W = 600          -- page width
+local PREVIEW_W = 250
+local LEFT = W - PREVIEW_W - 24   -- width of the left column next to the preview
+
 local ui = {}
 local sample
 
@@ -34,85 +38,100 @@ local function playSample()
   end)
 end
 
+local function at(region, page, x, y)
+  region:ClearAllPoints()
+  region:SetPoint("TOPLEFT", page, "TOPLEFT", x, y)
+  return region
+end
+
+-- Slider row: label on the left; stepper, slider, stepper, value on the right of `rightEdge`.
+local function sliderRow(page, label, y, rightEdge, min, max, step, onChange)
+  local W_ = ns.Window
+  at(W_.Text(page, "GameFontHighlight", label), page, 2, y - 4)
+  local value = W_.Text(page, "GameFontHighlight")
+  value:SetPoint("TOPRIGHT", page, "TOPLEFT", rightEdge, y - 4)
+  value:SetJustifyH("RIGHT")
+  value:SetWidth(44)
+  local slider = W_.Slider(page, 120, min, max, step, function(v)
+    value:SetText(onChange(v))
+  end)
+  slider:SetPoint("TOPRIGHT", page, "TOPLEFT", rightEdge - 44 - 30, y - 3)
+  local minus = W_.Stepper(page, -1, function() slider:Step(-1) end)
+  minus:SetPoint("RIGHT", slider, "LEFT", -4, 0)
+  local plus = W_.Stepper(page, 1, function() slider:Step(1) end)
+  plus:SetPoint("LEFT", slider, "RIGHT", 4, 0)
+  return slider, value
+end
+
 function SettingsTab.Build(page)
-  local W = ns.Window
+  local W_ = ns.Window
   local S = ns.Settings
 
-  -- counter
-  local h = W.Header(page, "COUNTER")
-  h:SetPoint("TOPLEFT", 0, 0)
-  ui.show = W.Check(page, "Show combo counter", function(v) S.Set("show", v) end)
-  ui.show:SetPoint("TOPLEFT", 0, -20)
+  -- combo counter
+  at(W_.Section(page, "Combo counter", W), page, 0, 0)
+  ui.show = at(W_.Check(page, "Show combo counter", function(v) S.Set("show", v) end), page, -2, -22)
 
-  local sizeLabel = W.Text(page, "GameFontHighlight", "Size")
-  sizeLabel:SetPoint("TOPLEFT", 4, -58)
-  ui.sizeValue = W.Text(page, "GameFontHighlight")
-  ui.sizeValue:SetPoint("TOPLEFT", 240, -58)
-  ui.size = W.Slider(page, 150, 50, 200, 5, function(v)
+  ui.size, ui.sizeValue = sliderRow(page, "Size", -56, LEFT, 50, 200, 5, function(v)
     S.Set("size", v)
-    ui.sizeValue:SetText(v .. "%")
+    return v .. "%"
   end)
-  ui.size:SetPoint("TOPLEFT", 36, -80)
-  local minus = W.Button(page, "-", 24, function() ui.size:SetValue(math.max(50, S.Get("size") - 5)) end)
-  minus:SetPoint("RIGHT", ui.size, "LEFT", -6, 0)
-  local plus = W.Button(page, "+", 24, function() ui.size:SetValue(math.min(200, S.Get("size") + 5)) end)
-  plus:SetPoint("LEFT", ui.size, "RIGHT", 6, 0)
 
-  ui.unlock = W.Check(page, "Unlock position", function(v) S.Set("unlocked", v) end)
-  ui.unlock:SetPoint("TOPLEFT", 0, -108)
-  local reset = W.Button(page, "Reset", 70, function() S.Set("pos", nil) end)
-  reset:SetPoint("LEFT", ui.unlock.label, "RIGHT", 10, 0)
+  ui.unlock = at(W_.Check(page, "Unlock position", function(v) S.Set("unlocked", v) end), page, -2, -86)
+  local reset = W_.Button(page, "Reset", 72, function() S.Set("pos", nil) end)
+  reset:SetPoint("TOPRIGHT", page, "TOPLEFT", LEFT, -88)
+  at(W_.Note(page, "While unlocked, drag the counter to move it."), page, 2, -112)
 
-  ui.reduced = W.Check(page, "Reduced effects", function(v) S.Set("reduced", v) end)
-  ui.reduced:SetPoint("TOPLEFT", 0, -136)
-
-  -- sound
-  local sh = W.Header(page, "SOUND")
-  sh:SetPoint("TOPLEFT", 0, -184)
-  local volLabel = W.Text(page, "GameFontHighlight", "Volume")
-  volLabel:SetPoint("TOPLEFT", 4, -208)
-  ui.volValue = W.Text(page, "GameFontHighlight")
-  ui.volValue:SetPoint("TOPLEFT", 240, -208)
-  ui.volume = W.Slider(page, 150, 0, 100, 25, function(v)
-    S.Set("volume", v)
-    ui.volValue:SetText(volumeText(v))
-    if v > 0 then ns.PlaySound("milestone") end
-  end)
-  ui.volume:SetPoint("TOPLEFT", 36, -230)
-
-  -- units
-  local uh = W.Header(page, "HEIGHT UNITS")
-  uh:SetPoint("TOPLEFT", 0, -270)
-  ui.units = W.Segmented(page, {
-    { label = "Metres", value = "m" },
-    { label = "Feet", value = "ft" },
-  }, 90, function(v) S.Set("units", v); ui.units:Select(v) end)
-  ui.units.buttons[1]:SetPoint("TOPLEFT", 4, -292)
-
-  -- minimap
-  local mh = W.Header(page, "MINIMAP")
-  mh:SetPoint("TOPLEFT", 0, -334)
-  ui.minimap = W.Check(page, "Minimap button", function(v)
-    S.Get("minimap").hide = not v
-    ns.Fire("SETTINGS", "minimap")
-  end)
-  ui.minimap:SetPoint("TOPLEFT", 0, -354)
+  ui.reduced = at(W_.Check(page, "Reduced effects", function(v) S.Set("reduced", v) end), page, -2, -130)
+  at(W_.Note(page, "No lightning, sparks or rays. Colours and the shine stay."), page, 2, -156)
 
   -- preview
   local box = CreateFrame("Frame", nil, page)
-  box:SetSize(250, 190)
-  box:SetPoint("TOPRIGHT", page, "TOPRIGHT", 0, -20)
+  box:SetSize(PREVIEW_W, 150)
+  box:SetPoint("TOPRIGHT", page, "TOPRIGHT", 0, -24)
   box:SetClipsChildren(true)
   local bg = box:CreateTexture(nil, "BACKGROUND")
   bg:SetAllPoints()
-  bg:SetColorTexture(0.05, 0.06, 0.08, 0.85)
-  local caption = W.Text(page, "GameFontNormalSmall", "Preview")
-  caption:SetPoint("BOTTOMLEFT", box, "TOPLEFT", 2, 4)
+  bg:SetColorTexture(0.04, 0.05, 0.07, 0.9)
+  local glow = box:CreateTexture(nil, "BACKGROUND", nil, 1)
+  glow:SetTexture(ns.MEDIA .. "glow")
+  glow:SetVertexColor(0.85, 0.7, 0.4, 0.18)
+  glow:SetSize(PREVIEW_W * 1.2, 120)
+  glow:SetPoint("CENTER", box, "CENTER", 0, -8)
+  W_.Border(box, 0.55, 0.45, 0.28, 0.45)
   ui.box = box
   ui.preview = ns.Counter.New(box)
-  ui.preview.root:SetPoint("CENTER", box, "CENTER", 0, -6)
-  local play = W.Button(page, "Play sample streak", 160, playSample)
-  play:SetPoint("TOP", box, "BOTTOM", 0, -8)
+  ui.preview.root:SetPoint("CENTER", box, "CENTER", 0, -4)
+  local play = W_.Button(page, "Play sample streak", PREVIEW_W, playSample)
+  play:SetPoint("TOP", box, "BOTTOM", 0, -6)
+
+  -- sound
+  at(W_.Section(page, "Sound", W), page, 0, -200)
+  ui.volume, ui.volValue = sliderRow(page, "Volume", -222, W, 0, 100, 25, function(v)
+    S.Set("volume", v)
+    if v > 0 then ns.PlaySound("milestone") end
+    return volumeText(v)
+  end)
+
+  -- units
+  at(W_.Section(page, "Units", W), page, 0, -262)
+  at(W_.Text(page, "GameFontHighlight", "Height"), page, 2, -288)
+  ui.units = W_.Segmented(page, {
+    { label = "Metres", value = "m" },
+    { label = "Feet", value = "ft" },
+  }, 70, function(v) S.Set("units", v); ui.units:Select(v) end)
+  ui.units.box:SetPoint("TOPRIGHT", page, "TOPRIGHT", 0, -284)
+  at(W_.Note(page, "Set from your region on first run (US: feet). Floors and landmarks live in Personal Stats."),
+    page, 2, -312)
+
+  -- minimap
+  at(W_.Section(page, "Minimap", W), page, 0, -340)
+  ui.minimap = at(W_.Check(page, "Show minimap button", function(v)
+    S.Get("minimap").hide = not v
+    ns.Fire("SETTINGS", "minimap")
+  end), page, -2, -362)
+
+  at(W_.Note(page, "Open this window: minimap button or |cffffd100/jumpers|r. Try |cffffd100/jumpers demo|r."),
+    page, 2, -400)
 
   box:SetScript("OnShow", showPreview)
   page:SetScript("OnShow", SettingsTab.Refresh)

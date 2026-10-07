@@ -95,6 +95,7 @@ describe("addon on a mocked client", function()
     for _ = 1, 3 do Mock.jump() end
     assert.is_true((Mock.sounds or 0) > 0)
     ns.Window.Select("stats")
+    ns.StatsTab.Refresh()
     Mock.advance(4)
     ns.Window.Toggle()
   end)
