@@ -232,7 +232,7 @@ setting picks one (the slider moves in 25 % steps):
 - **Frame:**
   - A portrait frame with the addon icon in the round portrait at the top left.
   - The title "Jumpers" and a close button.
-  - Three tabs at the bottom: **Personal Stats**, **Leaderboard** (tagged `v2`), **Settings**.
+  - Three tabs at the bottom: **Personal Stats**, **Leaderboard**, **Settings**.
 - **Personal Stats:**
   - A **Character / Account** toggle.
   - **Height climbed:** a big number (Changa One), "N jumps × 1.5 m".
@@ -242,12 +242,15 @@ setting picks one (the slider moves in 25 % steps):
   - **Best streak:** Today, 7 days, 30 days, Year, All time, each coloured by its tier.
   - **All milestones:** a collapsible list showing passed ✓, next highlighted and the
     rest dimmed.
-- **Leaderboard:** v1 shows a short "coming in v2" notice. The v2 layout is:
-  - period buttons (Today / 7 days / 30 days / Year)
-  - a "Players online" checkbox
-  - a table of rank, player (class colour, online dot), best streak (tier colour) and
-    when it was set
-  - your own row highlighted
+- **Leaderboard:**
+  - Title "Best single streak", the realm and how many players with Jumpers are online.
+  - Period switch Today / 7 days / 30 days / Year, and a "Players online" checkbox.
+  - A card with up to 50 rows: rank (top 3 in gold, silver, bronze), player in class
+    colour with a green dot when online (own realm without the suffix), best streak in its
+    tier colour, and when it was set ("12 min ago", "3 h ago", "yesterday", "Oct 07").
+  - Your own row highlighted in gold. Wheel scrolls the list.
+  - An empty state, and a footer saying how records are shared (guild, channel) and that
+    relayed records stay hidden until two players confirm them.
 - **Settings** (R6.3):
   - Counter group (show, size slider with steppers, unlock + reset, reduced effects),
     with a live preview of the counter beside it and a "Play sample streak" button.

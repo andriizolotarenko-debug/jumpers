@@ -6,7 +6,7 @@ ns.Window = Window
 
 local PAGES = {
   { key = "stats", label = "Personal Stats" },
-  { key = "board", label = "Leaderboard |cff9d9d9dv2|r" },
+  { key = "board", label = "Leaderboard" },
   { key = "settings", label = "Settings" },
 }
 

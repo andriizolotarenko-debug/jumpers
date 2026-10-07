@@ -4,7 +4,7 @@ A World of Warcraft: Forever addon that turns travel into a game: chain your jum
 streaks, watch the combo counter grow, see how high you would have climbed, and compete
 on a shared leaderboard.
 
-Status: v1 beta. The leaderboard comes in v2. Design and plan: [REQUIREMENTS.md](REQUIREMENTS.md),
+Status: beta. Counter, stats and a peer-to-peer leaderboard (in game testing under way). Design and plan: [REQUIREMENTS.md](REQUIREMENTS.md),
 [UI-SPEC.md](UI-SPEC.md), [ARCHITECTURE.md](ARCHITECTURE.md), [PLAN.md](PLAN.md).
 
 ## Install

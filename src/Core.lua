@@ -47,6 +47,7 @@ local function endStreak(ended)
   local isNewBest, prev, isTodayBest, prevToday = ns.Stats.endStreak(ns.char, today, ended.n)
   ns.Stats.endStreak(ns.account, today, ended.n)
   ns.Fire("STREAK_END", ended.n, isNewBest, prev, isTodayBest, prevToday)
+  ns.Comm.OwnStreak(ended, isNewBest or isTodayBest)
 end
 
 local function tick()
@@ -105,11 +106,18 @@ frame:SetScript("OnEvent", function(_, event, name)
   if event == "ADDON_LOADED" and name == ADDON then
     initDB()
   elseif event == "PLAYER_LOGIN" then
+    -- the leaderboard is kept per realm
+    local realm = GetNormalizedRealmName and GetNormalizedRealmName()
+    if type(realm) ~= "string" or realm == "" or (issecretvalue and issecretvalue(realm)) then realm = "realm" end
+    JumpersDB.boards = type(JumpersDB.boards) == "table" and JumpersDB.boards or {}
+    JumpersDB.boards[realm] = ns.Board.ensure(JumpersDB.boards[realm])
+    ns.board = JumpersDB.boards[realm]
     ns.Detector.Init()
     ns.CounterUI.Init()
     ns.Caption.Init()
     ns.Minimap.Init()
     ns.Settings.RegisterOptionsStub()
+    ns.Comm.Init()
   end
 end)
 

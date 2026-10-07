@@ -144,6 +144,26 @@ local function install()
   _G.GetPlayerFacing = function() return Mock.facing or 0 end
   _G.GetCurrentRegion = function() return 3 end
   _G.UnitName = function() return "Tester" end
+  _G.UnitClass = function() return "Hunter", "HUNTER" end
+  _G.GetServerTime = function() return 20733 * 86400 + 50000 + math.floor(clock) end
+  _G.time = os.time
+  _G.GetNormalizedRealmName = function() return "TestRealm" end
+  _G.GetRealmName = function() return "Test Realm" end
+  _G.IsInGuild = function() return true end
+  _G.GetChannelName = function() return Mock.joined and 5 or 0 end
+  _G.JoinTemporaryChannel = function() Mock.joined = true end
+  _G.ChatFrame_RemoveChannel = noop
+  _G.RAID_CLASS_COLORS = { HUNTER = { r = 0.67, g = 0.83, b = 0.45 } }
+  Mock.sent = {}
+  _G.C_ChatInfo = {
+    RegisterAddonMessagePrefix = function() return true end,
+    SendAddonMessage = function(prefix, msg, target, ch)
+      assert(prefix == "JMPR" and #msg <= 255)
+      assert(target == "GUILD" or (target == "CHANNEL" and ch == 5))
+      table.insert(Mock.sent, msg)
+      return true
+    end,
+  }
   _G.UnitLevel = function() return 12 end
   _G.GetCVar = function() return "eu" end
   _G.PlaySoundFile = function(path, channel)

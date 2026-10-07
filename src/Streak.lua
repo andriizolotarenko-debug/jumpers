@@ -7,7 +7,7 @@ Streak.__index = Streak
 Streak.WINDOW = 3
 
 function Streak.new()
-  return setmetatable({ n = 0, last = nil, started = nil }, Streak)
+  return setmetatable({ n = 0, last = nil, started = nil, minGap = nil }, Streak)
 end
 
 function Streak:active()
@@ -17,8 +17,8 @@ end
 -- Ends the streak if its window ran out by time t. Returns the ended streak or nil.
 function Streak:tick(t)
   if self.n > 0 and t - self.last > Streak.WINDOW then
-    local ended = { n = self.n, startedAt = self.started, endedAt = self.last }
-    self.n, self.last, self.started = 0, nil, nil
+    local ended = { n = self.n, startedAt = self.started, endedAt = self.last, minGap = self.minGap }
+    self.n, self.last, self.started, self.minGap = 0, nil, nil, nil
     return ended
   end
   return nil
@@ -30,6 +30,9 @@ function Streak:jump(t)
   local ended = self:tick(t)
   if self.n == 0 then
     self.started = t
+  else
+    local gap = t - self.last
+    if not self.minGap or gap < self.minGap then self.minGap = gap end
   end
   self.n = self.n + 1
   self.last = t

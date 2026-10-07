@@ -66,16 +66,21 @@ pastes the output.
 
 ## Phase 2 — v2.0 Leaderboard
 
-1. Libraries via `.pkgmeta` externals: AceComm-3.0, LibSerialize, LibDeflate.
+Built (see ARCHITECTURE: Leaderboard):
+
+1. No libraries: plain-text messages (`net/Wire`) and our own send pacing.
 2. `net/Verify` and `net/Board` as pure modules with specs: timeframes, quorum = 2,
-   hide unconfirmed, online set.
+   hide unconfirmed, online set, sync picks.
 3. `net/Comm`: channel join, live streak broadcast, heartbeat (5 min), sync on login /
-   every 15 min, rate limiting.
-4. Leaderboard tab in the stats window:
-   - timeframes: Today / 7 / 30 / 365 days
-   - Players Online filter
-5. Multi-client test: two or more characters on one realm. Check live record, relayed
-   record (hidden until 2 relayers), online expiry after 10 min.
+   every 15 min when quiet, jittered and suppressed answers.
+4. Leaderboard tab: Today / 7 / 30 / 365 days, Players Online filter.
+
+Still to do in game:
+
+5. Multi-client test: two or more characters on one realm (or one guild). Check live
+   record, relayed record (hidden until 2 relayers), online expiry after 10 min.
+6. Check that the client lets an addon join `JumpersLB` and send addon messages to it
+   (S9). If not, the board runs on guild traffic only.
 
 ## Risks
 

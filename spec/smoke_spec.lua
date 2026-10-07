@@ -105,6 +105,45 @@ describe("addon on a mocked client", function()
     ns.Window.Toggle()
   end)
 
+  it("shares streaks and builds the leaderboard", function()
+    local Wire = ns.Wire
+    Mock.advance(10)                                -- channel joined, heartbeat and sync sent
+    assert.is_true(ns.Comm.status.channel)
+    local own = ns.Board.top(ns.board, ns.Today(), 1)
+    assert.equal("Tester-TestRealm", own[1].p)      -- our x30 from the first streak
+    local found = false
+    for _, m in ipairs(Mock.sent) do if m:match("^R|1|HUNTER|30|") then found = true end end
+    assert.is_true(found)
+
+    local now = GetServerTime()
+    local live = { c = "MAGE", n = 64, e = now - 2, d = ns.Today(), u = 60, g = 0.7 }
+    Mock.fire("CHAT_MSG_ADDON", "JMPR", Wire.record(live), "CHANNEL", "Ann-TestRealm")
+    local relayed = { p = "Bob-TestRealm", c = "ROGUE", n = 99, e = now - 4000, d = ns.Today(), u = 90, g = 0.7 }
+    Mock.fire("CHAT_MSG_ADDON", "JMPR", Wire.relay(relayed), "GUILD", "Cid-TestRealm")
+    assert.equal(2, #ns.Board.top(ns.board, ns.Today(), 1))   -- Bob still unconfirmed
+    Mock.fire("CHAT_MSG_ADDON", "JMPR", Wire.relay(relayed), "CHANNEL", "Dee-TestRealm")
+    local top = ns.Board.top(ns.board, ns.Today(), 1)
+    assert.same({ "Bob-TestRealm", "Ann-TestRealm", "Tester-TestRealm" }, { top[1].p, top[2].p, top[3].p })
+    -- a fake: too fast to be real
+    local fake = { c = "MAGE", n = 500, e = now, d = ns.Today(), u = 10, g = 0.1 }
+    Mock.fire("CHAT_MSG_ADDON", "JMPR", Wire.record(fake), "CHANNEL", "Eve-TestRealm")
+    assert.equal(3, #ns.Board.top(ns.board, ns.Today(), 1))
+
+    local before = #Mock.sent
+    Mock.fire("CHAT_MSG_ADDON", "JMPR", Wire.query(), "CHANNEL", "Fay-TestRealm")
+    Mock.advance(40)
+    local relays = 0
+    for i = before + 1, #Mock.sent do if Mock.sent[i]:match("^S|") then relays = relays + 1 end end
+    assert.is_true(relays > 0)
+    for i = before + 1, #Mock.sent do assert.is_nil(Mock.sent[i]:match("^S|1|Tester")) end  -- never our own
+
+    ns.Window.Show("board")
+    local online = ns.Comm.Online()
+    assert.is_true(online["Ann-TestRealm"]); assert.is_true(online["Tester-TestRealm"])
+    ns.BoardTab.Refresh()
+    ns.Window.Toggle()
+  end)
+
   it("resets progress", function()
     assert.is_true(ns.char.jumps > 0)
     ns.ResetProgress()

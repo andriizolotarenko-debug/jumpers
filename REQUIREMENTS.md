@@ -129,8 +129,9 @@ The approved visual design, with exact values, is in [UI-SPEC.md](UI-SPEC.md).
   players reachable by in-game addon messaging (same realm / connected realms).
 - **R4.4** Trust model: **trust the addon, not the player.** See §5.
 - **R4.5** **Players Online** filter: shows only players currently online, meaning heard
-  from within the last 10 minutes. Every addon sends a small "I'm here + my bests"
-  heartbeat every ~5 minutes. All data in this view is first-hand and live.
+  from within the last 10 minutes. Every addon sends a small "I'm here" heartbeat every
+  ~5 minutes. The heartbeat carries no bests (they would come from SavedVariables, see
+  R5.2); the filter narrows the board to players heard recently.
 
 ## 5. Integrity (anti-cheat)
 
@@ -165,7 +166,7 @@ peer-to-peer over addon messages.
 
 - **R6.1** One addon window with three tabs:
   - **Personal Stats**
-  - **Leaderboard** (v1 shows a "coming in v2" notice)
+  - **Leaderboard**
   - **Settings**
 - **R6.2** The window opens from a **minimap button** (the player can hide it) or with
   `/jumpers`. Options → AddOns → Jumpers only holds a button that opens the window.

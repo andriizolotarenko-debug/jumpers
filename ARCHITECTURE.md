@@ -16,7 +16,7 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). `Rx.y` references point there.
 - **Few libraries.**
   - v1 uses only LibDataBroker-1.1 and LibDBIcon-1.0 (with LibStub and
     CallbackHandler) for the minimap button (R6.2).
-  - v2 adds AceComm, LibSerialize and LibDeflate for networking.
+  - The leaderboard needs no libraries: its messages are short plain text.
   - All of them come in through `.pkgmeta` externals and are never committed.
 - **Fail safe.** Any API that returns nothing (facing in instances, region, calendar)
   degrades to "don't count" or a default. It never errors and never counts by mistake.
@@ -43,10 +43,10 @@ src/
   ui/BoardTab.lua   Leaderboard tab (v1: "coming in v2" notice)
   ui/SettingsTab.lua  settings controls + live counter preview
   ui/Minimap.lua    LibDataBroker launcher + LibDBIcon button
-  -- v2 --
-  net/Comm.lua      ADAPTER: addon messages, channel join, throttling
-  net/Board.lua     PURE: record store, timeframes, quorum, online set
+  net/Wire.lua      PURE: message format
   net/Verify.lua    PURE: plausibility checks
+  net/Board.lua     PURE: record store, timeframes, quorum, online set, sync picks
+  net/Comm.lua      ADAPTER: addon messages, channel join, pacing, heartbeat, sync
 libs/               fetched by the packager from .pkgmeta externals (gitignored)
 media/              counter textures (TGA) + ChangaOne-Italic.ttf + OFL.txt
 spec/               busted tests for every PURE module
@@ -151,25 +151,37 @@ Exact look and timings: [UI-SPEC.md](UI-SPEC.md).
 
 ## Leaderboard (v2)
 
-- **Transport.** `C_ChatInfo.SendAddonMessage` with prefix `JMPR` to the guild and to a
-  hidden custom channel joined on login. The game server authenticates the sender's
-  name. Traffic is throttled by AceComm / ChatThrottleLib.
-- **Live record.** On streak end, broadcast:
-  `{len, startedAt, endedAt (server epoch), realmDay, intervals digest}` (R5.1).
+- **Transport (`net/Comm`).** `C_ChatInfo.SendAddonMessage` with prefix `JMPR` to the
+  guild and to the hidden custom channel `JumpersLB` (joined a few seconds after login and
+  removed from every chat window). The game server authenticates the sender's name. No
+  libraries: messages are short plain text (`net/Wire`) and a queue sends one message per
+  ~1.1 s to stay inside the server's addon-message allowance. A blocked or throttled send
+  is retried a few times, then dropped; the board keeps working locally.
+- **Live record.** When a streak above x10 ends as the character's best of the realm day,
+  it goes on our own board and out to peers:
+  `R|1|class|n|endedAt (server epoch)|realmDay|duration|minGap` (R5.1). The sender is the
+  player.
 - **Verify (pure).** Reject a record when:
-  - the minimum gap between jumps is below the physical jump cycle (~0.8 s on flat
-    ground, minus tolerance)
-  - its duration is outside `[(n-1)·minGap, (n-1)·3 s]`
-  - its timestamps are in the future or stale (R5.3)
+  - it is x10 or shorter, or absurdly long;
+  - its minimum gap between jumps is below 0.45 s (the jump cycle is longer; generous
+    tolerance until it is measured in game);
+  - its duration is outside `[(n-1)·minGap, (n-1)·3 s]` give or take 1 s;
+  - it ends in the future, or (live) more than 2 min ago, or its realm day does not match
+    its end time give or take a day (R5.3).
 - **Board (pure).**
-  - Per-player best per realm day; timeframes derived from that.
-  - Second-hand records need **2 distinct relayers** reporting the identical record.
-    Until then they are hidden (R5.4).
-  - Own SavedVariables are never re-broadcast as first-hand (R5.2).
-- **Online.** A heartbeat about every 5 min carries a short "here + my bests" message.
-  The online set is everyone heard from within 10 min (R4.5).
-- **Sync.** On login and about every 15 min, request each timeframe's top N from peers.
-  Answers are rate-limited and jittered so a crowded channel does not storm.
+  - Kept per realm in `JumpersDB.boards[realm]`: the best record per player and realm
+    day; timeframes (today / 7 / 30 / 365 days) derive from that. 366 days are kept.
+  - Second-hand records (`S|1|player|…`) need **2 distinct relayers** reporting the
+    identical record. Until then they are hidden (R5.4). Relays of a player's own records
+    by that player are ignored, and we never relay our own (R5.2).
+- **Online.** A heartbeat every 5 min (`H|1|class`) says "I'm here". The online set is
+  everyone heard from within 10 min (R4.5). The heartbeat carries no bests: those would
+  come from SavedVariables, which R5.2 rules out. The online view filters the board.
+- **Sync.** On login, and every 15 min when the channel has had no sync traffic for
+  10 min, send `Q|1`. A peer answers after a random 2–6 s with the top 10 records of each
+  timeframe (at most 25 messages), skips any record two others already relayed while it
+  waited, and answers at most once per 5 min. Answers are broadcast, so everyone listening
+  benefits from one request.
 
 ## Testing
 

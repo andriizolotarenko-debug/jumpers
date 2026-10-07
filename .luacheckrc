@@ -17,6 +17,8 @@ read_globals = {
   "PanelTemplates_SetNumTabs", "PanelTemplates_SetTab", "PanelTemplates_TabResize", "PlaySoundFile",
   "STANDARD_TEXT_FONT", "StaticPopup_Show", "YES", "NO", "Settings", "UnitName", "UnitLevel", "SettingsPanel", "UIParent", "UnitOnTaxi", "date", "geterrorhandler",
   "hooksecurefunc", "issecretvalue", "tinsert", "unpack", "wipe",
+  "C_ChatInfo", "ChatFrame_RemoveChannel", "Enum", "GetChannelName", "GetNormalizedRealmName", "GetRealmName",
+  "GetServerTime", "IsInGuild", "JoinTemporaryChannel", "NUM_CHAT_WINDOWS", "RAID_CLASS_COLORS", "UnitClass", "time",
 }
 
 files["spec/"] = { std = "+busted" }
