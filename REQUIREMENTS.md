@@ -1,4 +1,4 @@
-# Jumpers — Requirements (v1, draft)
+# Jumpers — Requirements (v1)
 
 Target client: **World of Warcraft: Forever** (launch 2026-11-04).
 Distribution: CurseForge + zip on GitHub Releases.
@@ -19,6 +19,11 @@ leaderboard.
   break the streak. A jump with no movement since the previous one is ignored. It does
   not extend the streak and does not reset the window.
   - Movement = a change of position **or a turn** (change of facing).
+  - Fail safe: if the game does not expose the character's facing (possible inside
+    dungeons and raids), turning alone does not count there. Only moving counts. The
+    addon must never error or count movement on missing data.
+- **R1.3a** One key press = one jump. Holding the jump key does not repeat jumps on the
+  Forever client, so each counted jump is a deliberate press.
   - Movement is the character's own movement. Standing still on a moving ship is not
     movement.
 - **R1.4** Contexts:
@@ -55,6 +60,9 @@ leaderboard.
   | x50 | Blue (rare) |
   | x100 | Purple (epic) |
   | x200 | Orange (legendary) |
+
+  The first three looks (base x1–x4, grey x5, bronze x10) differ only by font colour
+  shade. Effects start at x25 (R2.6).
 
 - **R2.6** Four stacking effects, one added at each tier from green upward:
   x25, x50, x100, x200. Examples: sparks, glow, flames, lightning.
@@ -113,8 +121,10 @@ peer-to-peer over addon messages.
 - **R5.4** Decentralised sync. Each addon keeps its own copy of the leaderboard. On
   login, and periodically, it asks online peers for their top records and merges them.
   This fills in records set while you were offline.
-  - Such second-hand records are accepted as **confirmed** only when several independent
-    peers report the same record (quorum).
+  - Such second-hand records are accepted as **confirmed** only when at least
+    **2 independent peers** report the same record (quorum).
+  - Until then they are shown marked **"unconfirmed"**, so boards on quiet realms are
+    not empty.
   - With nobody online, you see your local copy: your own records plus what you saw
     before. It syncs when others come online.
   - To keep traffic small, only each timeframe's top N records are synced, never the full
@@ -132,11 +142,5 @@ peer-to-peer over addon messages.
 
 ## Open questions
 
-1. Records that have not reached quorum yet: hide them, or show them marked
-   "unconfirmed"? Quorum size: 2 or 3 peers?
-2. Players Online: is "heard within the last 10 minutes" acceptable?
-3. Verify in-game: does holding the jump key re-jump continuously on the Forever client,
-   and does it fire the jump hook each time? Affects detection and farming (R5.5).
-4. Verify in-game: is the character's facing readable inside dungeons and raids? On the
-   modern client it is restricted there. If not, turning cannot be detected in instances,
-   so movement there falls back to position change only.
+None. Defaults adopted on 2026-10-07: unconfirmed records are shown with a mark,
+quorum = 2 peers, "online" = heard within the last 10 minutes.
