@@ -1,6 +1,7 @@
 # Jumpers — Requirements (v1)
 
-Target client: **World of Warcraft: Forever** (launch 2026-11-04).
+Target client: **World of Warcraft: Forever** (launch 2026-11-04). The same build also
+runs on Retail, Classic Era and Anniversary (one TOC lists every interface number).
 Distribution: CurseForge + zip on GitHub Releases.
 
 Jumpers turns travelling across the world into a game: chain jumps into **streaks**,

@@ -11,7 +11,14 @@ Status: beta. Counter, stats and a peer-to-peer leaderboard (in game testing und
 
 Download the zip from [CurseForge](https://www.curseforge.com/wow/addons/jumpers) or
 [GitHub Releases](https://github.com/andriizolotarenko-debug/jumpers/releases) and extract the `Jumpers`
-folder into `World of Warcraft/_classic_beta_/Interface/AddOns/`.
+folder into the `Interface/AddOns/` folder of your game version:
+
+| Game version | Folder |
+|---|---|
+| Retail | `World of Warcraft/_retail_/` |
+| Classic Era | `World of Warcraft/_classic_era_/` |
+| Anniversary | `World of Warcraft/_anniversary_/` |
+| Forever | `World of Warcraft/_classic_beta_/` (beta) |
 
 ## Use
 

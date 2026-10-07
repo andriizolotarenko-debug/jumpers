@@ -197,5 +197,9 @@ Exact look and timings: [UI-SPEC.md](UI-SPEC.md).
 - **Packaging.** `.pkgmeta` + BigWigs packager in GitHub Actions on a `v*` tag. It
   uploads to CurseForge (`CF_API_KEY` repo secret + `## X-Curse-Project-ID` in the TOC)
   and attaches the zip to a GitHub Release (R7).
-- **TOC `## Interface`.** Read it from the Forever client with
-  `/dump select(4, GetBuildInfo())`.
+- **TOC `## Interface`.** One TOC lists every supported client:
+  `120100, 11509, 20506, 16001` (Retail, Classic Era, Anniversary, Forever). The packager
+  tags the one zip for each game version on CurseForge. Check a client's number with
+  `/dump select(4, GetBuildInfo())` and bump it when a patch changes it.
+- **One code path.** Every client-specific call is guarded (missing API, secret values,
+  blocked sends), so the same files run on the Classic and the Mainline engines.

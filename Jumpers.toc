@@ -1,4 +1,4 @@
-## Interface: 16001
+## Interface: 120100, 11509, 20506, 16001
 ## Title: Jumpers
 ## Notes: Chain moving jumps into streaks, watch the combo counter grow and climb all the way to the Moon.
 ## Author: Andrii Zolotarenko
