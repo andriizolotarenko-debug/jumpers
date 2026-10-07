@@ -11,7 +11,8 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). `Rx.y` references point there.
   tracked through events, and polling runs only inside the 3 s window.
 - **Small, owned art.** The counter ships its own textures (TGA, drawn in greys and
   tinted in game) and one OFL font, so the game matches the approved design
-  ([UI-SPEC.md](UI-SPEC.md)). Sounds come from the game's built-in sound kits.
+  ([UI-SPEC.md](UI-SPEC.md)). Sounds are short synthesised OGG files, pre-mixed at four
+  volume levels.
 - **Few libraries.**
   - v1 uses only LibDataBroker-1.1 and LibDBIcon-1.0 (with LibStub and
     CallbackHandler) for the minimap button (R6.2).
@@ -33,8 +34,9 @@ src/
   Units.lua         PURE: jumps → m / ft / floors; milestone index, progress, crossings
   Landmarks.lua     DATA: the 58 milestones (UI-SPEC)
   Settings.lua      settings store + defaults; Options → AddOns stub that opens the window
-  ui/Counter.lua    combo counter frame, assembly, tier looks, window fade, snap-out, NEW BEST plaque
-  ui/Effects.lua    4 stacking effect layers (x25 / x50 / x100 / x200) + trim spark bursts
+  ui/Counter.lua    combo counter: assembly, tier looks, window fade, snap-out, NEW BEST plaque,
+                    the 4 stacking effects (x25 / x50 / x100 / x200) and trim spark bursts
+  ui/CounterUI.lua  the on-screen instance: position, unlock + drag, streak events, /jumpers demo
   ui/Caption.lua    milestone caption above the counter
   ui/Window.lua     portrait frame with three tabs
   ui/StatsTab.lua   Personal Stats tab
@@ -97,7 +99,7 @@ tick(t):           active, t - last > 3        → emit streakEnd(n, startedAt, 
 Time comes from `GetTime()`, injected so tests can drive it. The window is a constant
 (R1.2).
 
-## Counter UI (ui/Counter, ui/Effects)
+## Counter UI (ui/Counter, ui/CounterUI)
 
 Exact look and timings: [UI-SPEC.md](UI-SPEC.md).
 
@@ -113,18 +115,11 @@ Exact look and timings: [UI-SPEC.md](UI-SPEC.md).
 - **Count text.**
   - x1–x6: one FontString with `OUTLINE`.
   - From x7: 4 offset FontStrings for the extrusion plus the face.
-- **Window fade.** A small OnUpdate, active only during a streak, drives the ribbon and
-  effects alpha (hold 1 s, fade by 3 s).
-- **`AnimationGroup`s:**
-  - pop on every jump
-  - milestone and tier-up flash with a sound (R2.8)
-  - trim snap with a spark burst
-  - snap-out or fade-out at streak end (R2.4)
-- **Effects.** Additive texture layers with looping animations (R2.6):
-  - shine: Translation, clipped
-  - lightning: flipbook + Alpha
-  - sparks: Translation + Alpha
-  - rays: Rotation
+- **Animation.** One OnUpdate per counter, running only while the counter is shown. It
+  drives the window fade (hold 1 s, fade by 3 s), the pops, trim bursts, tier-up flash and
+  ring, the 4 stacking effects and the end (snap or fade, NEW BEST hold). Effects are
+  additive textures: shine (clipped to the band), lightning (6 frames), sparks, rays
+  (`SetRotation`).
 - **Scale.** `1 + min(0.001 × n, 3.0)` (R2.7).
 
 ## Persistence
@@ -176,6 +171,8 @@ Exact look and timings: [UI-SPEC.md](UI-SPEC.md).
 ## Testing
 
 - **Unit:** `busted` on Lua 5.1 for all pure modules, run in CI.
+- **Smoke:** `spec/smoke_spec.lua` loads every file in TOC order on a mocked client
+  (`spec/wow_mock.lua`), drives jumps through the real hook and runs every OnUpdate.
 - **Lint:** `luacheck` with WoW globals declared.
 - **In game:** a manual checklist in PLAN.md, run on the Forever client. The dev loop
   is a symlink from the repo into `Interface/AddOns/Jumpers`, then `/reload`.

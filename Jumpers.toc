@@ -1,0 +1,33 @@
+## Interface: 16001
+## Title: Jumpers
+## Notes: Chain moving jumps into streaks, watch the combo counter grow and climb all the way to the Moon.
+## Author: Andrii Zolotarenko
+## Version: @project-version@
+## SavedVariables: JumpersDB
+## SavedVariablesPerCharacter: JumpersCharDB
+## IconTexture: Interface\AddOns\Jumpers\media\icon
+## AddonCompartmentFunc: Jumpers_OnAddonCompartmentClick
+## X-Curse-Project-ID: 1731684
+## X-License: MIT
+
+libs\LibStub\LibStub.lua
+libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+
+src\Streak.lua
+src\Tiers.lua
+src\Units.lua
+src\Stats.lua
+src\Landmarks.lua
+src\Settings.lua
+src\Core.lua
+src\Detector.lua
+src\ui\Counter.lua
+src\ui\CounterUI.lua
+src\ui\Caption.lua
+src\ui\Window.lua
+src\ui\StatsTab.lua
+src\ui\BoardTab.lua
+src\ui\SettingsTab.lua
+src\ui\Minimap.lua

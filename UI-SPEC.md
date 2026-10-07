@@ -116,25 +116,32 @@ out (R2.3).
 
 ## Assets
 
-Assets are shipped in `media/`:
-- Textures are power-of-two TGA files.
+Assets are shipped in `media/` and built by `tools/make_art.py` and `tools/make_sounds.py`
+from the sources in `art/`:
+- Textures are power-of-two TGA files, drawn at 4 texture pixels per UI pixel.
 - Coloured textures are drawn in greys and tinted with `SetVertexColor`.
 
 | File | Use |
 |---|---|
-| `ribbon_mid.tga`, `ribbon_side.tga` | Cloth, tinted per tier |
-| `ribbon_trim_mid.tga`, `ribbon_trim_side.tga` | Gold trim, untinted |
+| `ribbon_mid.tga` | Cloth band, tiles horizontally, tinted per tier |
+| `ribbon_side.tga`, `ribbon_trim_side.tga` | Tail + fold, and its gold trim (untinted). The middle trim is drawn with solid lines |
 | `glyph.tga`, `glyph_outline.tga` | Jumper silhouette, plain and with outline |
-| `shine.tga`, `glow.tga`, `spark.tga`, `rays.tga` | Effects |
-| `bolts.tga` | Lightning flipbook, 6 frames |
+| `shine.tga`, `glow.tga`, `spark.tga`, `star.tga`, `ring.tga` | Effects |
+| `rays14.tga`, `rays9.tga` | The two x200 ray sets |
+| `bolt1.tga` … `bolt6.tga` | Lightning, 6 frames |
+| `caption_band.tga`, `line.tga` | Milestone caption band and its gold lines |
+| `icon.tga`, `icon_round.tga` | Addon icon (minimap, AddOns list, window portrait) |
 | `ChangaOne-Italic.ttf` + `OFL.txt` | Count font and its licence |
 
-Sounds come from the game's built-in sound kits. The kits are picked during
-implementation for:
-- the jump tick
-- the milestone
-- the tier-up
-- the snap-out
+Sounds are the addon's own short synthesised OGG files in `media/sounds/`. `PlaySoundFile`
+has no volume argument, so each sound is pre-mixed at 25 / 50 / 75 / 100 % and the volume
+setting picks one (the slider moves in 25 % steps):
+- `tick`: every counted jump
+- `milestone`: x5, x10, x20
+- `tierup`: x25, x50, x100, x200
+- `snap`: the snap-out
+- `fanfare`: NEW BEST!
+- `caption`: the milestone caption
 
 ## NEW BEST! (R2.9)
 

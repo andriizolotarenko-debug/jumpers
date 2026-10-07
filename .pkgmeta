@@ -1,0 +1,23 @@
+package-as: Jumpers
+
+enable-nolib-creation: no
+
+externals:
+  libs/LibStub: https://repos.wowace.com/wow/libstub/trunk
+  libs/CallbackHandler-1.0: https://repos.wowace.com/wow/callbackhandler/trunk/CallbackHandler-1.0
+  libs/LibDataBroker-1.1: https://github.com/tekkub/libdatabroker-1-1
+  libs/LibDBIcon-1.0: https://repos.wowace.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0
+
+ignore:
+  - .github
+  - .gitignore
+  - .luacheckrc
+  - .busted
+  - art
+  - spec
+  - tools
+  - ARCHITECTURE.md
+  - PLAN.md
+  - REQUIREMENTS.md
+  - UI-SPEC.md
+  - README.md
