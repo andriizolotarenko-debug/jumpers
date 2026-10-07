@@ -27,18 +27,18 @@ describe("Units", function()
     assert.equal("ft", Units.default(nil, "US")); assert.equal("m", Units.default(nil, nil))
   end)
 
-  it("has 58 rising landmarks", function()
-    assert.equal(58, #Landmarks)
+  it("has 55 rising landmarks", function()
+    assert.equal(55, #Landmarks)
     for i = 2, #Landmarks do assert.is_true(Landmarks[i].m > Landmarks[i - 1].m, Landmarks[i].name) end
   end)
 
   it("finds crossings and progress", function()
     assert.is_nil(Units.crossed(0, 13, Landmarks))       -- 19.5 m
     assert.equal(1, Units.crossed(13, 14, Landmarks))    -- 21 m
-    assert.equal(2, Units.crossed(0, 20, Landmarks))     -- 30 m, two at once -> last
+    assert.equal(2, Units.crossed(0, 70, Landmarks))     -- 105 m, two at once -> last
     local k, frac, togo = Units.progress(10, Landmarks)  -- 15 m of 20
     assert.equal(0, k); assert.near(0.75, frac, 1e-9); assert.equal(4, togo)
     k, frac, togo = Units.progress(3000000000, Landmarks)
-    assert.equal(58, k); assert.equal(1, frac); assert.is_nil(togo)
+    assert.equal(55, k); assert.equal(1, frac); assert.is_nil(togo)
   end)
 end)

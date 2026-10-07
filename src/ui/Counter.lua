@@ -22,6 +22,7 @@ local DEPTH = Tiers.DEPTH
 local SIDE_U, SIDE_V = 160 / 256, 144 / 256
 
 local GOLD = Tiers.hex("#f2c75c")
+local SPARK_GOLD = Tiers.mix(GOLD, { 1, 1, 1 }, 0.25)
 local GOLD_TOP, GOLD_BOTTOM = Tiers.hex("#ffe7a0"), Tiers.hex("#9c6a1c")
 local PLAQUE_GOLD = Tiers.hex("#ffd76a")
 local RIM = Tiers.hex("#1a1107")
@@ -178,6 +179,23 @@ function Counter.New(parent, opts)
   gradient(self.gold[3], GOLD_TOP, GOLD_BOTTOM)
   gradient(self.gold[4], GOLD_TOP, GOLD_BOTTOM)
   self.flash = solid(mid, "OVERLAY", 1, WHITE, 1, "ADD")
+
+  -- gold ornaments: x75 corner curls, x150 crest + pendant (middle), x300 wings (sides)
+  self.ornCorner, self.ornCrest, self.ornWing = {}, {}, {}
+  local cu, cv = 72 / 128, 72 / 128
+  for i, f in ipairs({ { 0, 0 }, { 1, 0 }, { 0, 1 }, { 1, 1 } }) do
+    local t = tex(mid, "ARTWORK", 4, "orn_corner")
+    t:SetTexCoord(f[1] == 1 and cu or 0, f[1] == 1 and 0 or cu, f[2] == 1 and cv or 0, f[2] == 1 and 0 or cv)
+    self.ornCorner[i] = t
+  end
+  for i = 1, 2 do
+    local t = tex(mid, "ARTWORK", 4, "orn_crest")
+    t:SetTexCoord(0, 192 / 256, i == 2 and 80 / 128 or 0, i == 2 and 0 or 80 / 128)
+    self.ornCrest[i] = t
+    local w = tex(sides, "ARTWORK", 3, "orn_wing")
+    w:SetTexCoord(i == 2 and 144 / 256 or 0, i == 2 and 0 or 144 / 256, 0, 1)
+    self.ornWing[i] = w
+  end
 
   -- x25 shine, clipped to the band
   local clip = CreateFrame("Frame", nil, inner)
@@ -366,7 +384,32 @@ function Counter:Layout(n)
     self.gold[i]:SetShown(look.trimMid)
   end
   self.tailTrim[1]:SetShown(look.trimSide); self.tailTrim[2]:SetShown(look.trimSide)
+  self:LayoutOrnaments()
   self:LayoutBolts()
+end
+
+-- Ornament groups: { texture, x, y, w, h } per piece; group k shows from Tiers.ORNAMENTS[k].
+function Counter:LayoutOrnaments()
+  local x0, x1 = self.x0, self.x1
+  local c, cr, w = self.ornCorner, self.ornCrest, self.ornWing
+  self.ornSpecs = {
+    { { c[1], x0 - 5, 19, 18, 18 }, { c[2], x1 + 5, 19, 18, 18 }, { c[3], x0 - 5, -19, 18, 18 }, { c[4], x1 + 5, -19, 18, 18 } },
+    { { cr[1], 0, 21, 48, 20 }, { cr[2], 0, -21, 48, 20 } },
+    { { w[1], x0 - 36, -4, 36, 32 }, { w[2], x1 + 36, -4, 36, 32 } },
+  }
+  self:PlaceOrnaments(nil, 1)
+end
+
+-- Places every ornament; group `grow` is drawn at `k` times its size (the appear pop).
+function Counter:PlaceOrnaments(grow, k)
+  local shown = self.look.ornaments
+  for g, specs in ipairs(self.ornSpecs) do
+    local f = g == grow and k or 1
+    for _, sp in ipairs(specs) do
+      place(sp[1], sp[2], sp[3], sp[4] * f, sp[5] * f)
+      sp[1]:SetShown(g <= shown)
+    end
+  end
 end
 
 -- Lightning slots: 2 above, 2 below, 1 at each end (y up).
@@ -404,9 +447,9 @@ function Counter:Pop(amp, dur)
   self.popAmp, self.popDur, self.popAt = amp, dur, GetTime()
 end
 
-function Counter:Burst(part)
+function Counter:Burst(part, color, group)
   if self.reduced then return end
-  table.insert(self.bursts, 1, { part = part, at = GetTime() })
+  table.insert(self.bursts, 1, { part = part, at = GetTime(), color = color or SPARK_GOLD, group = group })
   self.bursts[4] = nil
 end
 
@@ -414,6 +457,7 @@ function Counter:Reset()
   self.ending = nil
   self.best = nil
   self.tierAt = nil
+  self.ornAt = nil
   wipe(self.bursts)
   for i = 1, #self.particles do self.particles[i]:Hide() end
   self.plaque:Hide()
@@ -437,9 +481,18 @@ function Counter:Jump(n)
     self:Pop(0.45, 0.32)
     self.tierAt = now
     self:Sound("tierup")
+  elseif event == "ornament" then
+    self:Pop(0.35, 0.26)
+    self:Sound("milestone")
+    self.ornAt, self.ornGroup = now, self.look.ornaments
+    self:Burst("ornament", nil, self.look.ornaments)
   elseif event == "stage" then
     self:Pop(0.3, 0.22)
     self:Sound("milestone")
+  elseif event == "pulse" then
+    self:Pop(0.24, 0.2)
+    self:Sound("tick")
+    self:Burst("pulse", Tiers.mix(self.look.glow, WHITE, 0.5))
   elseif n == 1 then
     self:Pop(0.3, 0.2)
     self:Sound("tick")
@@ -515,8 +568,18 @@ local function updateBursts(self, now)
     local burst = self.bursts[b]
     local dt = now - burst.at
     local edges
+    local count, speed, lifeBase = 30, 1, 0.55
     if burst.part == "mid" then
       edges = { { self.x0, self.x1, h, 1 }, { self.x0, self.x1, -h, -1 } }
+    elseif burst.part == "pulse" then
+      edges = { { self.x0, self.x1, h, 1 }, { self.x0, self.x1, -h, -1 } }
+      count, speed, lifeBase = 14, 0.55, 0.4
+    elseif burst.part == "ornament" then
+      edges = {}
+      for _, sp in ipairs(self.ornSpecs[burst.group] or {}) do
+        edges[#edges + 1] = { sp[2] - sp[4] / 2, sp[2] + sp[4] / 2, sp[3], sp[3] >= 0 and 1 or -1 }
+      end
+      if #edges == 0 then edges = { { self.x0, self.x1, h, 1 } } end
     else
       edges = {
         { self.x0 - 22, self.x0, -h - d, -1 }, { self.x1, self.x1 + 22, -h - d, -1 },
@@ -527,12 +590,13 @@ local function updateBursts(self, now)
       local p = self.particles[(b - 1) * 30 + i]
       local e = edges[(i - 1) % #edges + 1]
       local r1, r2, r3 = rand(i, 1), rand(i, 2), rand(i, 3)
-      local life = 0.55 + r2 * 0.4
-      if dt <= life then
-        local x = e[1] + (e[2] - e[1]) * r1 + (r3 - 0.5) * 80 * dt
-        local y = e[3] + e[4] * (35 + r2 * 65) * dt - 70 * dt * dt
+      local life = lifeBase + r2 * 0.4
+      if i <= count and dt <= life then
+        local x = e[1] + (e[2] - e[1]) * r1 + (r3 - 0.5) * 80 * speed * dt
+        local y = e[3] + e[4] * (35 + r2 * 65) * speed * dt - 70 * dt * dt
         local sz = (0.8 + r3 * 1.3) * ((i - 1) % 4 == 0 and 8 or 5)
         place(p, x, y, sz, sz)
+        tint(p, burst.color)
         p:SetAlpha(1 - dt / life)
         p:Show()
       else
@@ -541,9 +605,9 @@ local function updateBursts(self, now)
     end
     -- trim flash
     local fa = dt < 0.35 and (1 - dt / 0.35) or 0
-    if burst.part == "mid" then
+    if burst.part == "mid" or burst.part == "ornament" then
       for i = 1, 4 do self.goldFlash[i]:SetAlpha(fa); self.goldFlash[i]:SetShown(fa > 0) end
-    else
+    elseif burst.part == "side" then
       for i = 1, 2 do self.tailFlash[i]:SetAlpha(fa); self.tailFlash[i]:SetShown(fa > 0) end
     end
     if dt < 1 then used = b end
@@ -690,7 +754,8 @@ function Counter:Update(now, elapsed)
       self.plaque:SetAlpha(clamp01(pt * 2))
       self.plaque:SetScale(math.max(0.01, ps))
       self.plaque:ClearAllPoints()
-      self.plaque:SetPoint("CENTER", self.inner, "CENTER", 0, (H / 2 + 17) / math.max(0.01, ps))
+      local lift = look.ornaments >= 2 and 9 or 0   -- clear the x150 crest
+      self.plaque:SetPoint("CENTER", self.inner, "CENTER", 0, (H / 2 + 17 + lift) / math.max(0.01, ps))
       self.plaqueGlow:SetAlpha(0.45 + 0.2 * math.sin(now * 5))
       for i = 1, 6 do self.stars[i]:SetAlpha(0.5 + 0.5 * math.sin(now * 6 + i * 1.7)) end
       if self.prev:IsShown() then self.prev:SetAlpha(clamp01((t - 0.2) / 0.25)) end
@@ -718,4 +783,13 @@ function Counter:Update(now, elapsed)
   local effects = self.reduced and math.min(look.effects, 1) or look.effects
   updateEffects(self, now, effects, flag)
   updateBursts(self, now)
+  if self.ornAt then
+    local p = (now - self.ornAt) / 0.3
+    if p < 1 then
+      self:PlaceOrnaments(self.ornGroup, 1 + 0.7 * (1 - p) * (1 - p))
+    else
+      self.ornAt = nil
+      self:PlaceOrnaments(nil, 1)
+    end
+  end
 end

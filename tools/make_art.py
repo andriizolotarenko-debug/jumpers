@@ -280,9 +280,87 @@ def icon():
     save(rnd, "icon_round")
 
 
+# ---------- ornaments: x75 corner curls, x150 crest, x300 wings ----------
+def spiral(cx, cy, r0, r1, a0, turns, steps=60):
+    pts = []
+    for i in range(steps + 1):
+        t = i / steps
+        a = a0 + t * turns * 2 * math.pi
+        r = r0 + (r1 - r0) * t
+        pts.append((cx + math.cos(a) * r, cy + math.sin(a) * r))
+    return pts
+
+
+def quad(p0, c, p1, steps=40):
+    return [((1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * c[0] + t * t * p1[0],
+             (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * c[1] + t * t * p1[1]) for t in (i / steps for i in range(steps + 1))]
+
+
+def gilded(name, w, h, lines, fills=(), canvas=None):
+    """Gold strokes with a dark rim, in a w x h UI px box (y down). lines: [(points, width)],
+    fills: [polygon]. Gold runs light at the top of the box to dark at the bottom."""
+    k = PX * SS
+    W, Hh = int(w * k), int(h * k)
+    rim = Image.new("L", (W, Hh), 0)
+    gold = Image.new("L", (W, Hh), 0)
+    dr, dg = ImageDraw.Draw(rim), ImageDraw.Draw(gold)
+    for pts, width in lines:
+        pp = [(x * k, y * k) for x, y in pts]
+        dr.line(pp, fill=255, width=int((width + 1.8) * k), joint="curve")
+        dg.line(pp, fill=255, width=int(width * k), joint="curve")
+        for (x, y), rr in ((pp[0], width / 2), (pp[-1], width / 2)):
+            dr.ellipse((x - (rr + 0.9) * k, y - (rr + 0.9) * k, x + (rr + 0.9) * k, y + (rr + 0.9) * k), fill=255)
+            dg.ellipse((x - rr * k, y - rr * k, x + rr * k, y + rr * k), fill=255)
+    for poly in fills:
+        pp = [(x * k, y * k) for x, y in poly]
+        dr.polygon(pp, fill=255)
+        dr.line(pp + [pp[0]], fill=255, width=int(1.8 * k), joint="curve")
+        dg.polygon(pp, fill=255)
+    grad = np.zeros((Hh, W, 4), np.uint8)
+    for y in range(Hh):
+        grad[y, :, :3] = gold_at(y / Hh)
+        grad[y, :, 3] = 255
+    g = Image.fromarray(grad)
+    g.putalpha(gold)
+    out = Image.new("RGBA", (W, Hh), RIM + (0,))
+    out.putalpha(rim)
+    out = Image.alpha_composite(out, g).resize((int(w * PX), int(h * PX)), Image.LANCZOS)
+    cw, ch = canvas
+    c = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
+    c.paste(out, (0, 0))
+    save(c, name)
+
+
+def ornaments():
+    # corner curl, 18 x 18 UI px; its root (bottom-right) sits on the band's top-left corner
+    curl = [(16, 16), (11, 11), (8, 8.5)] + spiral(6, 6.5, 3.2, 0.6, math.radians(60), 1.15)
+    leaf = [(13.5, 13.5), (15.5, 9), (12, 11)]
+    gilded("orn_corner", 18, 18, [(curl, 1.7)], fills=[leaf], canvas=(128, 128))
+    # crest, 48 x 20 UI px; bottom edge sits on the band's top edge
+    lines = []
+    for sgn in (-1, 1):
+        cx = 24
+        pts = quad((cx + sgn * 4, 15.5), (cx + sgn * 12, 18), (cx + sgn * 16, 13))
+        pts += spiral(cx + sgn * 16.5, 10.2, 2.8, 0.5, math.radians(90 if sgn < 0 else 90), 1.0 * sgn)[1:]
+        lines.append((pts, 1.6))
+        lines.append((quad((cx + sgn * 3, 12), (cx + sgn * 8, 6), (cx + sgn * 12, 6.5)), 1.2))
+    diamond = [(24, 4), (29, 11), (24, 18), (19, 11)]
+    ball = spiral(24, 2.4, 1.2, 1.2, 0, 1, steps=16)
+    gilded("orn_crest", 48, 20, lines, fills=[diamond, ball], canvas=(256, 128))
+    # wing, 36 x 32 UI px; its root (right middle) touches the tail tip
+    lines = []
+    for end, ctrl, curl_r in (((5, 5), (22, 3), 2.6), ((2, 16), (18, 13), 2.2), ((6, 27), (20, 29), 2.0)):
+        pts = quad((34, 16), ctrl, end)
+        a0 = math.atan2(pts[-1][1] - pts[-2][1], pts[-1][0] - pts[-2][0])
+        pts += spiral(end[0] + math.cos(a0 + math.pi / 2) * curl_r, end[1] + math.sin(a0 + math.pi / 2) * curl_r,
+                      curl_r, 0.4, a0 - math.pi / 2, -0.9)[1:]
+        lines.append((pts, 1.7))
+    gilded("orn_wing", 36, 32, lines, canvas=(256, 128))
+
+
 # ---------- small icon: minimap button and the AddOns list ----------
 def icon_small():
-    """Full-bleed square: big white jumper with a dark outline on a blue radial ground.
+    """Full-bleed square: big gold jumper with a dark outline on a blue radial ground.
     The round medallion (icon.tga) does not read at 16-20 px."""
     S = 512
     y, x = np.mgrid[0:S, 0:S]
@@ -309,7 +387,11 @@ def icon_small():
             dil = np.maximum(dil, np.roll(np.roll(base, int(round(math.sin(ang) * rr)), 0), int(round(math.cos(ang) * rr)), 1))
     outline = Image.new("RGBA", (S, S), (10, 15, 30, 0))
     outline.putalpha(Image.fromarray(dil))
-    face = Image.new("RGBA", (S, S), (255, 255, 255, 0))
+    grad = np.zeros((S, S, 4), np.uint8)
+    top, bottom = (S - h) // 2, (S + h) // 2
+    for yy in range(S):
+        grad[yy, :, :3] = gold_at((yy - top) / max(1, bottom - top))
+    face = Image.fromarray(grad)
     face.putalpha(mask)
     im = Image.alpha_composite(Image.alpha_composite(ground, outline), face)
     save(im.resize((128, 128), Image.LANCZOS), "icon_small")
@@ -325,4 +407,5 @@ if __name__ == "__main__":
     caption()
     icon()
     icon_small()
+    ornaments()
     print("ok")

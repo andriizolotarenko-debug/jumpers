@@ -32,7 +32,7 @@ src/
   Tiers.lua         PURE: n → look (colours, part alphas, trims, lettering, effects, scale)
   Stats.lua         PURE: today / all-time counts, per-day bests (realm day), period bests, NEW BEST check
   Units.lua         PURE: jumps → m / ft / floors; milestone index, progress, crossings
-  Landmarks.lua     DATA: the 58 milestones (UI-SPEC)
+  Landmarks.lua     DATA: the 55 milestones (UI-SPEC)
   Settings.lua      settings store + defaults; Options → AddOns stub that opens the window
   ui/Counter.lua    combo counter: assembly, tier looks, window fade, snap-out, NEW BEST plaque,
                     the 4 stacking effects (x25 / x50 / x100 / x200) and trim spark bursts

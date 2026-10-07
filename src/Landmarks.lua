@@ -1,13 +1,10 @@
--- DATA: the 58 milestones (UI-SPEC: Milestones). Heights in metres.
+-- DATA: the 55 milestones (UI-SPEC: Milestones). Heights in metres.
 -- Rows marked wow are estimates, to be measured in game.
 local _, ns = ...
 ns = ns or {}
 
 local Landmarks = {
   { "Durotar zeppelin tower", 20, "wow" },
-  { "Westfall Lighthouse", 30, "wow" },
-  { "Cathedral of Light spire", 45, "wow" },
-  { "Thunder Bluff mesa", 65, "wow" },
   { "Statue of Liberty", 93 },
   { "Great Pyramid of Giza", 139 },
   { "Space Needle", 184 },

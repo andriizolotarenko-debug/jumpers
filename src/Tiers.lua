@@ -26,6 +26,7 @@ Tiers.TRIM_SIDE = 20
 Tiers.OUTLINE_UPTO = 6
 Tiers.DEPTH = 4
 Tiers.STAGES = { [5] = true, [10] = true, [20] = true }
+Tiers.ORNAMENTS = { 75, 150, 300 }   -- corner curls, crest + pendant, wings
 
 local WHITE, BLACK = { 1, 1, 1 }, { 0, 0, 0 }
 
@@ -56,6 +57,15 @@ function Tiers.effects(n)
   return Tiers.index(n) - 1
 end
 
+-- Number of gold ornament groups on the frame.
+function Tiers.ornaments(n)
+  local k = 0
+  for _, at in ipairs(Tiers.ORNAMENTS) do
+    if n >= at then k = k + 1 end
+  end
+  return k
+end
+
 -- Extrusion colour for layer d (DEPTH = back ... 1 = front).
 function Tiers.extrude(cloth, d)
   local depth = Tiers.DEPTH
@@ -78,16 +88,22 @@ function Tiers.look(n)
     trimSide = n >= Tiers.TRIM_SIDE,
     extruded = n > Tiers.OUTLINE_UPTO,
     effects = i - 1,
+    ornaments = Tiers.ornaments(n),
     scale = Tiers.growth(n),
   }
 end
 
--- What happens when the streak reaches n: "tier" (a new colour), "stage" (x5/x10/x20) or nil.
+-- What happens when the streak reaches n: "tier" (a new colour), "ornament" (x75/x150/x300),
+-- "stage" (x5/x10/x20), "pulse" (every other tenth jump) or nil.
 function Tiers.event(n)
   for i = 2, #Tiers.LIST do
     if Tiers.LIST[i].min == n then return "tier" end
   end
+  for _, at in ipairs(Tiers.ORNAMENTS) do
+    if at == n then return "ornament" end
+  end
   if Tiers.STAGES[n] then return "stage" end
+  if n % 10 == 0 then return "pulse" end
   return nil
 end
 

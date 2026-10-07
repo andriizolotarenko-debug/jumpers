@@ -73,6 +73,9 @@ The approved visual design, with exact values, is in [UI-SPEC.md](UI-SPEC.md).
   - x50 lightning
   - x100 sparks
   - x200 rays
+- **R2.6a** Every 10th jump without a bigger moment gets a small spark pulse. From x75 the
+  gold frame gains ornaments: corner curls at x75, a crest and pendant at x150, wings at
+  x300.
 - **R2.7** Size growth: **+0.1% per jump** from the first one (x100 = +10%,
   x1000 = +100%). Capped at **+300%** (reached at x3000). At the end it should be
   genuinely big.
@@ -100,9 +103,10 @@ The approved visual design, with exact values, is in [UI-SPEC.md](UI-SPEC.md).
     The player can switch.
   - Floors are a fun unit inside the stats: 3 m per floor in metres mode, 10 ft in feet
     mode.
-- **R3.3** **Milestones.** There are 58 landmarks, from a WoW zeppelin tower (20 m) to
+- **R3.3** **Milestones.** There are 55 landmarks, from a WoW zeppelin tower (20 m) to
   the distance around the Sun:
-  - Each landmark is roughly 10–50% above the previous one.
+  - The first two come quickly (20 m and 93 m), then each landmark is roughly 10–50% above
+    the previous one.
   - The list moves through WoW and real buildings, then mountains, the sky, orbits and
     space objects.
   - The stats show a progress bar from the last landmark passed to the next one, plus

@@ -65,16 +65,16 @@ describe("addon on a mocked client", function()
     ns.On("MILESTONE", function(i) seen = i end)
     Mock.moving = true
     Mock.fire("PLAYER_STARTED_MOVING")
-    for _ = 1, 15 do Mock.jump() end   -- 33 -> 48 jumps: past 45 m and 65 m? 72 m
+    for _ = 1, 35 do Mock.jump() end   -- 33 -> 68 jumps = 102 m: past the Statue of Liberty (93 m)
     assert.is_not_nil(seen)
     Mock.moving = false
     Mock.fire("PLAYER_STOPPED_MOVING")
     Mock.advance(5)
   end)
 
-  it("plays every tier on the demo", function()
-    SlashCmdList.JUMPERS("demo 210")
-    Mock.advance(0.22 * 211 + 4)
+  it("plays every tier and ornament on the demo", function()
+    SlashCmdList.JUMPERS("demo 310")
+    Mock.advance(0.22 * 311 + 4)
   end)
 
   it("opens the window and every tab", function()

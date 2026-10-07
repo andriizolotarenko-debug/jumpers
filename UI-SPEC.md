@@ -85,6 +85,31 @@ Tier-up (R2.8):
 
 Effects use the current tier's glow colour.
 
+## Every tenth jump
+
+Every 10th jump that has no bigger moment of its own (not x10, x20, a tier or an
+ornament) gets a small pulse:
+- a pop (amplitude 0.24, 0.2 s);
+- 14 sparks in the tier's glow colour (mixed 50% with white) drift off the top and bottom
+  edges of the band and fade within ~0.4–0.8 s;
+- the tick sound.
+
+## Gold ornaments (x75, x150, x300)
+
+Past the last colour the frame keeps getting richer. Each group snaps on with a pop
+(amplitude 0.35, 0.26 s), grows in from 170% to full size over 0.3 s, flashes the trim,
+bursts gold sparks from its pieces and plays the milestone sound. They stay for the rest
+of the streak and fade with the ribbon.
+
+| From | Ornament | Pieces |
+|---|---|---|
+| x75 | Corner curls | A gold scroll with a leaf at each corner of the band, 18 × 18 |
+| x150 | Crest and pendant | A diamond with a ball and two scrolls on top of the band, mirrored below it, 48 × 20 |
+| x300 | Wings | Three sweeping filigree strokes with curled ends out past each tail, 36 × 32 |
+
+Drawn like the trim: gold gradient `#ffe7a0 → #d9a640 → #9c6a1c` with a dark rim. With
+the crest on, the NEW BEST plaque sits 9 px higher.
+
 ## Size growth (R2.7)
 
 `scale = 1 + min(0.001 × n, 3.0)`, so it grows +0.1% per jump from the first one:
@@ -131,14 +156,15 @@ from the sources in `art/`:
 | `bolt1.tga` … `bolt6.tga` | Lightning, 6 frames |
 | `caption_band.tga`, `line.tga` | Milestone caption band and its gold lines |
 | `icon.tga`, `icon_round.tga` | Addon icon: window portrait, leaderboard notice |
-| `icon_small.tga` | Minimap button and AddOns list: a big white jumper on blue, readable at 16 px |
+| `icon_small.tga` | Minimap button and AddOns list: a big gold jumper on blue, readable at 16 px |
+| `orn_corner.tga`, `orn_crest.tga`, `orn_wing.tga` | Gold ornaments, untinted |
 | `ChangaOne-Italic.ttf` + `OFL.txt` | Count font and its licence |
 
 Sounds are the addon's own short synthesised OGG files in `media/sounds/`. `PlaySoundFile`
 has no volume argument, so each sound is pre-mixed at 25 / 50 / 75 / 100 % and the volume
 setting picks one (the slider moves in 25 % steps):
-- `tick`: every counted jump
-- `milestone`: x5, x10, x20
+- `tick`: every counted jump and the tenth-jump pulse
+- `milestone`: x5, x10, x20 and the ornaments
 - `tierup`: x25, x50, x100, x200
 - `snap`: the snap-out
 - `fanfare`: NEW BEST!
@@ -193,7 +219,7 @@ setting picks one (the slider moves in 25 % steps):
   - A **Character / Account** toggle.
   - **Height climbed:** a big number (Changa One), "N jumps × 1.5 m".
   - A progress bar from the last landmark passed (with ✓) to the next one, with
-    "Milestone k of 58 · p% there · N jumps to go".
+    "Milestone k of 55 · p% there · N jumps to go".
   - **Totals:** a table with Today and All time columns. Rows: Jumps, Floors, Streaks.
   - **Best streak:** Today, 7 days, 30 days, Year, All time, each coloured by its tier.
   - **All milestones:** a collapsible list showing passed ✓, next highlighted and the
@@ -221,35 +247,34 @@ release.
 
 | # | Landmark | m | | # | Landmark | m |
 |---|---|---|---|---|---|---|
-| 1 | Durotar zeppelin tower (WoW) | 20 | | 30 | Kármán line, edge of space | 100,000 |
-| 2 | Westfall Lighthouse (WoW) | 30 | | 31 | Northern lights | 130,000 |
-| 3 | Cathedral of Light spire (WoW) | 45 | | 32 | Lowest satellite orbits | 160,000 |
-| 4 | Thunder Bluff mesa (WoW) | 65 | | 33 | Sputnik 1, lowest point | 215,000 |
-| 5 | Statue of Liberty | 93 | | 34 | Vostok 1, first human in space | 327,000 |
-| 6 | Great Pyramid of Giza | 139 | | 35 | International Space Station | 420,000 |
-| 7 | Space Needle | 184 | | 36 | Starlink satellites | 550,000 |
-| 8 | Karazhan (WoW) | 250 | | 37 | Iridium satellites | 780,000 |
-| 9 | Eiffel Tower | 330 | | 38 | Ceres, edge to edge | 940,000 |
-| 10 | Empire State Building | 443 | | 39 | Makemake, edge to edge | 1,430,000 |
-| 11 | Tokyo Skytree | 634 | | 40 | Pluto, edge to edge | 2,377,000 |
-| 12 | Burj Khalifa | 828 | | 41 | The Moon, edge to edge | 3,474,000 |
-| 13 | Teldrassil (WoW) | 1,100 | | 42 | Mercury, edge to edge | 4,879,000 |
-| 14 | Ben Nevis | 1,345 | | 43 | Mars, edge to edge | 6,779,000 |
-| 15 | Mount Hoverla | 2,061 | | 44 | O3b satellites | 8,062,000 |
-| 16 | Mount Olympus | 2,918 | | 45 | Earth, edge to edge | 12,742,000 |
-| 17 | Mount Fuji | 3,776 | | 46 | GPS satellites | 20,200,000 |
-| 18 | Mont Blanc | 4,806 | | 47 | Geostationary orbit | 35,786,000 |
-| 19 | Kilimanjaro | 5,895 | | 48 | Once around the Earth | 40,075,000 |
-| 20 | Aconcagua | 6,961 | | 49 | Neptune, edge to edge | 49,244,000 |
-| 21 | Mount Everest | 8,849 | | 50 | Twice around the Earth | 80,150,000 |
-| 22 | Airliners cruise here | 11,000 | | 51 | Saturn, edge to edge | 116,460,000 |
-| 23 | Ozone layer | 15,000 | | 52 | Jupiter, edge to edge | 139,820,000 |
-| 24 | Concorde cruised here | 18,000 | | 53 | Saturn's rings, edge to edge | 273,000,000 |
-| 25 | SR-71 Blackbird record | 25,929 | | 54 | The Moon | 384,400,000 |
-| 26 | Highest crewed balloon, 1961 | 34,668 | | 55 | To the Moon and back | 768,800,000 |
-| 27 | Highest skydive | 41,420 | | 56 | The Sun, edge to edge | 1,392,700,000 |
-| 28 | Highest weather balloon | 53,000 | | 57 | The Moon's orbit, all the way round | 2,415,000,000 |
-| 29 | Shooting stars burn up | 75,000 | | 58 | Around the Sun | 4,375,000,000 |
+| 1 | Durotar zeppelin tower (WoW) | 20 | | 29 | Lowest satellite orbits | 160,000 |
+| 2 | Statue of Liberty | 93 | | 30 | Sputnik 1, lowest point | 215,000 |
+| 3 | Great Pyramid of Giza | 139 | | 31 | Vostok 1, first human in space | 327,000 |
+| 4 | Space Needle | 184 | | 32 | International Space Station | 420,000 |
+| 5 | Karazhan (WoW) | 250 | | 33 | Starlink satellites | 550,000 |
+| 6 | Eiffel Tower | 330 | | 34 | Iridium satellites | 780,000 |
+| 7 | Empire State Building | 443 | | 35 | Ceres, edge to edge | 940,000 |
+| 8 | Tokyo Skytree | 634 | | 36 | Makemake, edge to edge | 1,430,000 |
+| 9 | Burj Khalifa | 828 | | 37 | Pluto, edge to edge | 2,377,000 |
+| 10 | Teldrassil (WoW) | 1,100 | | 38 | The Moon, edge to edge | 3,474,000 |
+| 11 | Ben Nevis | 1,345 | | 39 | Mercury, edge to edge | 4,879,000 |
+| 12 | Mount Hoverla | 2,061 | | 40 | Mars, edge to edge | 6,779,000 |
+| 13 | Mount Olympus | 2,918 | | 41 | O3b satellites | 8,062,000 |
+| 14 | Mount Fuji | 3,776 | | 42 | Earth, edge to edge | 12,742,000 |
+| 15 | Mont Blanc | 4,806 | | 43 | GPS satellites | 20,200,000 |
+| 16 | Kilimanjaro | 5,895 | | 44 | Geostationary orbit | 35,786,000 |
+| 17 | Aconcagua | 6,961 | | 45 | Once around the Earth | 40,075,000 |
+| 18 | Mount Everest | 8,849 | | 46 | Neptune, edge to edge | 49,244,000 |
+| 19 | Airliners cruise here | 11,000 | | 47 | Twice around the Earth | 80,150,000 |
+| 20 | Ozone layer | 15,000 | | 48 | Saturn, edge to edge | 116,460,000 |
+| 21 | Concorde cruised here | 18,000 | | 49 | Jupiter, edge to edge | 139,820,000 |
+| 22 | SR-71 Blackbird record | 25,929 | | 50 | Saturn's rings, edge to edge | 273,000,000 |
+| 23 | Highest crewed balloon, 1961 | 34,668 | | 51 | The Moon | 384,400,000 |
+| 24 | Highest skydive | 41,420 | | 52 | To the Moon and back | 768,800,000 |
+| 25 | Highest weather balloon | 53,000 | | 53 | The Sun, edge to edge | 1,392,700,000 |
+| 26 | Shooting stars burn up | 75,000 | | 54 | The Moon's orbit, all the way round | 2,415,000,000 |
+| 27 | Kármán line, edge of space | 100,000 | | 55 | Around the Sun | 4,375,000,000 |
+| 28 | Northern lights | 130,000 | |  | | |
 
 The space end is meant as a lifelong dream. At 5,000 jumps a day the Moon's diameter
 takes about 1.3 years, and the distance to the Moon about 140 years.
