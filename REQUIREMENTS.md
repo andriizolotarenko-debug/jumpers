@@ -42,34 +42,42 @@ leaderboard.
 
 ## 2. Combo counter UI
 
-- **R2.1** Hidden by default. Appears on the first counted jump as `x1`, then `x2`,
-  `x3`… on each counted jump within the window.
-- **R2.2** Placed above the character. The WoW API does not expose the character's screen
-  position. The camera keeps the character near screen centre, so the counter is anchored
-  above centre and the player can drag it.
-- **R2.3** No countdown or timer visual. The 3 s window is meant to be felt.
-- **R2.4** When the streak ends, the counter disappears **abruptly**, with a short
-  micro-animation (pop / snap). No slow fade.
-- **R2.5** Tiers change the counter's look (WoW item-quality colours):
+The approved visual design, with exact values, is in [UI-SPEC.md](UI-SPEC.md).
+
+- **R2.1** Hidden by default. The counter is a fantasy ribbon with the jumper glyph and
+  `xN`. It **assembles itself** as the streak grows:
+  - x1–x5: the glyph and count fade in (outlined lettering up to x6).
+  - x6–x10: the middle of the ribbon fades in. At x10 its gold trim snaps on with a
+    burst of gold sparks.
+  - x11–x20: the sides fade in the same way. Their trim snaps on at x20.
+- **R2.2** Placed at the character's feet. The WoW API does not expose the character's
+  screen position. The camera keeps the character near screen centre, so the counter is
+  anchored just below centre and the player can drag it.
+- **R2.3** No countdown. While no jump is made, the ribbon and effects hold for 1 s and
+  then fade out by the end of the 3 s window. The glyph and count stay.
+- **R2.4** When the streak ends:
+  - above x10: the glyph and count disappear **abruptly**, with a short snap.
+  - at x10 or below: they fade out quickly.
+- **R2.5** Tiers change the ribbon colour (WoW item-quality colours):
 
   | Streak | Tier colour |
   |---|---|
-  | x5 | Grey (poor) |
-  | x10 | Bronze |
+  | x1–x24 | Grey (while assembling) |
   | x25 | Green (uncommon) |
   | x50 | Blue (rare) |
   | x100 | Purple (epic) |
   | x200 | Orange (legendary) |
 
-  The first three looks (base x1–x4, grey x5, bronze x10) differ only by font colour
-  shade. Effects start at x25 (R2.6).
-
 - **R2.6** Four stacking effects, one added at each tier from green upward:
-  x25, x50, x100, x200. Examples: sparks, glow, flames, lightning.
-- **R2.7** Size growth: every 100 jumps grows the counter by **+10%** of its base size,
-  starting at x100 (x100 = +10%, x200 = +20%…). Capped at **+300%** (reached at x3000).
-  At the end it should be genuinely big.
-- **R2.8** Each tier change plays a short animation and sound.
+  - x25 shine
+  - x50 lightning
+  - x100 sparks
+  - x200 rays
+- **R2.7** Size growth: **+0.1% per jump** from the first one (x100 = +10%,
+  x1000 = +100%). Capped at **+300%** (reached at x3000). At the end it should be
+  genuinely big.
+- **R2.8** Each tier change plays a short animation and sound. The assembly milestones
+  x5, x10 and x20 get a lighter version.
 
 ## 3. Personal statistics
 

@@ -9,8 +9,9 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). `Rx.y` references point there.
   the game. A single adapter module talks to the WoW API.
 - **Zero cost when idle.** No per-frame work unless a streak is active. Movement is
   tracked through events, and polling runs only inside the 3 s window.
-- **No shipped art or sound in v1.** Use the game's built-in fonts, textures and sound
-  kits. No asset licensing, tiny package.
+- **Small, owned art.** The counter ships its own textures (TGA, drawn in greys and
+  tinted in game) and one OFL font, so the game matches the approved design
+  ([UI-SPEC.md](UI-SPEC.md)). Sounds come from the game's built-in sound kits.
 - **No libraries in v1.** Libraries arrive in v2 with networking (AceComm,
   LibSerialize, LibDeflate via `.pkgmeta` externals).
 - **Fail safe.** Any API that returns nothing (facing in instances, region, calendar)
@@ -36,6 +37,7 @@ src/
   net/Comm.lua      ADAPTER: addon messages, channel join, throttling
   net/Board.lua     PURE: record store, timeframes, quorum, online set
   net/Verify.lua    PURE: plausibility checks
+media/              counter textures (TGA) + ChangaOne-Italic.ttf + OFL.txt
 spec/               busted tests for every PURE module
 ```
 
@@ -88,17 +90,33 @@ Time comes from `GetTime()`, injected so tests can drive it. The window is a con
 
 ## Counter UI (ui/Counter, ui/Effects)
 
-- Child of `UIParent`, anchored above screen centre, draggable when unlocked (R2.2).
-- Text `x<n>` uses the built-in font, with colour from `Tiers`.
-  - Below x25 the looks differ only by font tint: base, x5 grey, x10 bronze (R2.5).
-- `AnimationGroup`s for the effects:
-  - **Pop-in** on every jump: a quick scale bounce.
-  - **Tier-up flash and sound** (R2.8).
-  - **Snap-out** on streak end: about 0.12 s of scale-up plus alpha to 0, then hide
-    (R2.4).
-- Effects: 4 texture layers with looping animations, toggled by `Tiers.effects`
-  (R2.6).
-- Scale: `1 + min(0.10 × floor(n / 100), 3.0)` (R2.7).
+Exact look and timings: [UI-SPEC.md](UI-SPEC.md).
+
+- **Frame.** Child of `UIParent`, anchored just below screen centre, draggable when
+  unlocked (R2.2).
+- **Layers.** The ribbon is split into three groups, each with its own alpha:
+  - core: glyph + count
+  - middle
+  - sides
+
+  `Tiers` turns `n` into a description of the look: colours, part alphas, trim flags,
+  lettering style, effects and scale. Counter only applies it.
+- **Count text.**
+  - x1–x6: one FontString with `OUTLINE`.
+  - From x7: 4 offset FontStrings for the extrusion plus the face.
+- **Window fade.** A small OnUpdate, active only during a streak, drives the ribbon and
+  effects alpha (hold 1 s, fade by 3 s).
+- **`AnimationGroup`s:**
+  - pop on every jump
+  - milestone and tier-up flash with a sound (R2.8)
+  - trim snap with a spark burst
+  - snap-out or fade-out at streak end (R2.4)
+- **Effects.** Additive texture layers with looping animations (R2.6):
+  - shine: Translation, clipped
+  - lightning: flipbook + Alpha
+  - sparks: Translation + Alpha
+  - rays: Rotation
+- **Scale.** `1 + min(0.001 × n, 3.0)` (R2.7).
 
 ## Persistence
 
