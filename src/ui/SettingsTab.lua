@@ -69,6 +69,11 @@ function SettingsTab.Build(page)
 
   -- combo counter
   at(W_.Section(page, "Combo counter", W), page, 0, 0)
+  local getMeta = (C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
+  local version = getMeta and getMeta("Jumpers", "Version")
+  if type(version) ~= "string" or version:find("@", 1, true) then version = "dev" end
+  local ver = W_.Note(page, version)
+  ver:SetPoint("TOPRIGHT", page, "TOPRIGHT", 0, -2)
   ui.show = at(W_.Check(page, "Show combo counter", function(v) S.Set("show", v) end), page, -2, -22)
 
   ui.size, ui.sizeValue = sliderRow(page, "Size", -56, LEFT, 50, 200, 5, function(v)

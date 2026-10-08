@@ -22,7 +22,7 @@ read_globals = {
   "IsInRaid", "IsInGroup", "LeaveChannelByName", "ERR_CHAT_PLAYER_NOT_FOUND_S", "ChatFrame_AddMessageEventFilter",
   "ChatFrameUtil", "ChatFrame_OpenChat", "IsControlKeyDown", "WOW_PROJECT_ID", "WOW_PROJECT_CLASSIC",
   "WOW_PROJECT_BURNING_CRUSADE_CLASSIC", "WOW_PROJECT_WRATH_CLASSIC", "WOW_PROJECT_CATACLYSM_CLASSIC",
-  "WOW_PROJECT_MISTS_CLASSIC", "ChatFontNormal", "GameFontHighlight", "IsMetaKeyDown",
+  "WOW_PROJECT_MISTS_CLASSIC", "ChatFontNormal", "GameFontHighlight", "IsMetaKeyDown", "C_AddOns", "GetAddOnMetadata",
 }
 
 files["spec/"] = { std = "+busted" }

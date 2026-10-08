@@ -264,6 +264,7 @@ setting picks one (the slider moves in 25 % steps):
   - A footer saying how records are shared (guild, channel, group, players you've met) and that
     relayed records stay hidden until two players confirm them.
 - **Settings** (R6.3):
+  - The addon version, small and grey, in the top right corner.
   - Counter group (show, size slider with steppers, unlock + reset, reduced effects),
     with a live preview of the counter beside it and a "Play sample streak" button.
   - Sound volume slider ("Off" at 0%).
