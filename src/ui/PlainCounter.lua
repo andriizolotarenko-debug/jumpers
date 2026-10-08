@@ -1,4 +1,4 @@
--- "Number only" counter: just "xN" in the tier colour. No ribbon, ornaments, pops or effects.
+-- "Number only" counter: just "xN" in white. No ribbon, colours, ornaments, pops or effects.
 -- Same interface as Counter, so CounterUI and the settings preview can use either.
 local _, ns = ...
 
@@ -25,8 +25,7 @@ function PlainCounter:Show(n)
   if not self.text:GetFont() then self.text:SetFont(STANDARD_TEXT_FONT, size, "OUTLINE") end
   self.text:SetShadowOffset(1, -1)
   self.text:SetShadowColor(0, 0, 0, 0.8)
-  local c = ns.Tiers.look(n).glow
-  self.text:SetTextColor(c[1], c[2], c[3])
+  self.text:SetTextColor(1, 1, 1)
   self.text:SetText("x" .. n)
   self.root:Show()
 end

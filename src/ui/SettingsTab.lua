@@ -69,11 +69,11 @@ local function sliderRow(page, label, y, rightEdge, min, max, step, onChange)
   local slider = W_.Slider(page, 120, min, max, step, function(v)
     value:SetText(onChange(v))
   end)
-  slider:SetPoint("TOPRIGHT", page, "TOPLEFT", rightEdge - 44 - 30, y - 3)
+  slider:SetPoint("TOPRIGHT", page, "TOPLEFT", rightEdge - 44 - 30 + slider.pad, y - 3)
   local minus = W_.Stepper(page, -1, function() slider:Step(-1) end)
-  minus:SetPoint("RIGHT", slider, "LEFT", -4, 0)
+  minus:SetPoint("RIGHT", slider, "LEFT", slider.pad - 10, 0)
   local plus = W_.Stepper(page, 1, function() slider:Step(1) end)
-  plus:SetPoint("LEFT", slider, "RIGHT", 4, 0)
+  plus:SetPoint("LEFT", slider, "RIGHT", 10 - slider.pad, 0)
   return slider, value
 end
 

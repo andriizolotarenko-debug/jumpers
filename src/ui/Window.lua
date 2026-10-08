@@ -140,18 +140,22 @@ function Window.Stepper(parent, dir, onClick)
 end
 
 -- A slim slider with a gold fill. Steps snap; SetSilently skips the callback.
+-- `width` is the visible track. The game keeps the whole thumb inside the slider frame, so the
+-- frame is wider by half a thumb on each side: at min and max the knob sits on the track ends.
+local THUMB = 32
 function Window.Slider(parent, width, min, max, step, onChange)
   local s = CreateFrame("Slider", nil, parent)
   s:SetOrientation("HORIZONTAL")
-  s:SetSize(width, 18)
+  s.pad = THUMB / 2
+  s:SetSize(width + THUMB, 18)
   s:SetMinMaxValues(min, max)
   s:SetValueStep(step)
   if s.SetObeyStepOnDrag then s:SetObeyStepOnDrag(true) end
   s:EnableMouse(true)
   local track = s:CreateTexture(nil, "BACKGROUND")
   track:SetColorTexture(0, 0, 0, 0.7)
-  track:SetPoint("LEFT", 0, 0)
-  track:SetPoint("RIGHT", 0, 0)
+  track:SetPoint("LEFT", s.pad, 0)
+  track:SetPoint("RIGHT", -s.pad, 0)
   track:SetHeight(6)
   local fill = s:CreateTexture(nil, "ARTWORK")
   fill:SetColorTexture(0.95, 0.72, 0.15, 1)
@@ -159,7 +163,7 @@ function Window.Slider(parent, width, min, max, step, onChange)
   fill:SetHeight(6)
   s:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
   local thumb = s:GetThumbTexture()
-  if thumb then thumb:SetSize(32, 32) end
+  if thumb then thumb:SetSize(THUMB, THUMB) end
   local function paint(v)
     fill:SetWidth(math.max(0.01, (v - min) / (max - min) * width))
   end
