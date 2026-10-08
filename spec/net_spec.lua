@@ -21,6 +21,8 @@ describe("Wire", function()
     assert.near(0.7, back.g, 1e-9); assert.near(36.9, back.u, 1e-9)
     kind, back = Wire.decode(Wire.relay(r), "Bob-Realm")
     assert.equal("S", kind); assert.equal("Ann-Realm", back.p)
+    kind, back = Wire.decode(Wire.test(r), "Ann-Realm")
+    assert.equal("T", kind); assert.equal(42, back.n); assert.equal("Ann-Realm", back.p)
   end)
 
   it("decodes queries and heartbeats, rejects junk", function()

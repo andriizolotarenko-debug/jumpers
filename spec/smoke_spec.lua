@@ -137,10 +137,38 @@ describe("addon on a mocked client", function()
     assert.is_true(relays > 0)
     for i = before + 1, #Mock.sent do assert.is_nil(Mock.sent[i]:match("^S|1|Tester")) end  -- never our own
 
+    -- self-test: the echo of our own "T" message is checked and never stored
+    local printed = {}
+    local print0 = ns.Print
+    ns.Print = function(m) printed[#printed + 1] = m end
+    before = #Mock.sent
+    SlashCmdList.JUMPERS("selftest")
+    Mock.advance(3)
+    local echo
+    for i = before + 1, #Mock.sent do if Mock.sent[i]:match("^T|1|") then echo = Mock.sent[i] end end
+    assert.is_not_nil(echo)
+    Mock.fire("CHAT_MSG_ADDON", "JMPR", echo, "CHANNEL", "Tester-TestRealm")
+    Mock.fire("CHAT_MSG_ADDON", "JMPR", echo, "GUILD", "Tester")
+    Mock.fire("CHAT_MSG_ADDON", "JMPR", echo, "CHANNEL", "Gus-TestRealm")      -- someone else's test
+    Mock.advance(30)
+    ns.Print = print0
+    local text = table.concat(printed, "\n")
+    assert.truthy(text:find("channel echo after", 1, true)); assert.truthy(text:find("guild echo after", 1, true))
+    assert.truthy(text:find("decoded and verified", 1, true)); assert.falsy(text:find("no guild echo", 1, true))
+    assert.equal(3, #ns.Board.top(ns.board, ns.Today(), 1))
+
+    -- past 50 players our place shows as "50+"
+    for i = 1, 55 do
+      ns.Board.addFirstHand(ns.board, { p = "P" .. i .. "-TestRealm", c = "MAGE", n = 200 + i, e = now - 10,
+        d = ns.Today(), u = 200, g = 0.6 })
+    end
     ns.Window.Show("board")
     local online = ns.Comm.Online()
     assert.is_true(online["Ann-TestRealm"]); assert.is_true(online["Tester-TestRealm"])
     ns.BoardTab.Refresh()
+    local pinned = false
+    for _, f in ipairs(Mock.frames) do if f._text == "50+" then pinned = true end end
+    assert.is_true(pinned)
     SlashCmdList.JUMPERS("demoboard")
     ns.BoardTab.Refresh()
     SlashCmdList.JUMPERS("demoboard")

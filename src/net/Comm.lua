@@ -26,6 +26,7 @@ local heard = {}               -- player -> last heard (server time)
 local lastSyncTraffic = 0
 local lastAnswer = -math.huge
 local answering = nil
+local selftest = nil           -- { at, n, got = { [target] = seconds } } while a self-test waits
 local status = { channel = false, guild = false, lastSync = nil }
 Comm.status = status
 
@@ -142,12 +143,25 @@ local function answerSync()
   end
 end
 
+-- Our own self-test message came back: the game echoes addon messages to the sender.
+local function onEcho(channel, data)
+  if data.n ~= selftest.n or selftest.got[channel] then return end
+  selftest.got[channel] = GetTime() - selftest.at
+  local ok, why = Verify.record(data, now(), ns.Today(), true)
+  ns.Print(string.format("self-test: %s echo after %.1f s, record %s", channel == "GUILD" and "guild" or "channel",
+    selftest.got[channel], ok and "decoded and verified" or ("rejected (" .. tostring(why) .. ")")))
+end
+
 local function onMessage(prefix, msg, channel, sender)
   if prefix ~= Wire.PREFIX or issecret(msg) then return end
   if channel ~= "GUILD" and channel ~= "CHANNEL" then return end
   local from = full(sender)
-  if not from or from == me then return end
+  if not from then return end
   local kind, data = Wire.decode(msg, from)
+  if from == me then
+    if kind == "T" and selftest then onEcho(channel, data) end
+    return
+  end
   if not kind then return end
   local t = now()
   heard[from] = t
@@ -186,6 +200,40 @@ function Comm.OwnStreak(ended, isDayBest)
   }
   if Board.addFirstHand(store(), rec) then ns.Fire("BOARD") end
   post(Wire.record(rec))
+end
+
+-- /jumpers selftest: sends a test record through the guild and the channel and waits for the
+-- game to echo it back. Checks sending, pacing, the channel, decoding and verification on this
+-- client. Other clients ignore "T" messages, so nothing reaches anyone's board.
+function Comm.SelfTest()
+  if not (C_ChatInfo and C_ChatInfo.SendAddonMessage) or not me then
+    ns.Print("self-test: addon messages are unavailable on this client")
+    return
+  end
+  if selftest then ns.Print("self-test: already running"); return end
+  if channelId <= 0 then joinChannel() end
+  status.guild = IsInGuild and IsInGuild() or false
+  ns.Print(string.format("self-test: channel %s, guild %s, %d message(s) queued",
+    status.channel and ("joined (#" .. channelId .. ")") or "unavailable",
+    status.guild and "yes" or "no", #queue))
+  if not status.channel and not status.guild then
+    ns.Print("self-test: nowhere to send. Join a guild, or check that custom channels are allowed.")
+    return
+  end
+  local n = 20 + math.random(0, 79)
+  selftest = { at = GetTime(), n = n, got = {} }
+  local t = now()
+  post(Wire.test({ c = myClass, n = n, e = t, d = ns.Today(), u = (n - 1) * 0.8, g = 0.6 }))
+  C_Timer.After(15 + #queue * PACE, function()
+    for _, target in ipairs({ "GUILD", "CHANNEL" }) do
+      local wanted = (target == "GUILD" and status.guild) or (target == "CHANNEL" and status.channel)
+      if wanted and not selftest.got[target] then
+        ns.Print("self-test: no " .. (target == "GUILD" and "guild" or "channel") .. " echo. Messages there may be blocked.")
+      end
+    end
+    ns.Print("self-test: done")
+    selftest = nil
+  end)
 end
 
 local function sync(force)

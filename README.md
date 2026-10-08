@@ -25,6 +25,7 @@ folder into the `Interface/AddOns/` folder of your game version:
 - Run and jump. Jumps made within 3 seconds of each other while moving chain into a streak.
 - `/jumpers` or the minimap button opens stats and settings.
 - `/jumpers demo` plays a sample streak on the counter.
+- `/jumpers selftest` checks that leaderboard messages go out and come back on your client.
 
 ## Develop
 

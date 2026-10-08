@@ -182,6 +182,9 @@ Exact look and timings: [UI-SPEC.md](UI-SPEC.md).
   timeframe (at most 25 messages), skips any record two others already relayed while it
   waited, and answers at most once per 5 min. Answers are broadcast, so everyone listening
   benefits from one request.
+- **Self-test.** `/jumpers selftest` sends `T|1|…` (a record shape) to the guild and the
+  channel and waits for the game's echo of our own message: it checks sending, the channel,
+  decoding and verification on one client. Other clients ignore `T`, so nothing is stored.
 
 ## Testing
 

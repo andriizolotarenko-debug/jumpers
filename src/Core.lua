@@ -142,6 +142,8 @@ SlashCmdList.JUMPERS = function(msg)
   msg = (msg or ""):lower():match("^%s*(.-)%s*$")
   if msg == "demoboard" then
     ns.BoardTab.ToggleDemo()
+  elseif msg == "selftest" then
+    ns.Comm.SelfTest()
   elseif msg == "demo" then
     ns.Demo(60)
   elseif msg:match("^demo %d+$") then

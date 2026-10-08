@@ -3,6 +3,7 @@
 --   S|1|player|class|n|endedAt|day|duration|minGap   relayed record (sync answer)
 --   Q|1                                              sync request
 --   H|1|class                                        heartbeat: "I'm here"
+--   T|1|class|n|endedAt|day|duration|minGap          self-test echo: a record shape nobody stores
 local _, ns = ...
 ns = ns or {}
 
@@ -35,6 +36,10 @@ function Wire.relay(r)
   return "S|" .. Wire.VERSION .. "|" .. r.p .. "|" .. fields(r)
 end
 
+function Wire.test(r)
+  return "T|" .. Wire.VERSION .. "|" .. fields(r)
+end
+
 function Wire.query()
   return "Q|" .. Wire.VERSION
 end
@@ -51,15 +56,15 @@ local function record(p, f, i)
   return r
 end
 
--- Decodes a message from `sender`. Returns kind ("R", "S", "Q", "H") and its data, or nil.
+-- Decodes a message from `sender`. Returns kind ("R", "S", "Q", "H", "T") and its data, or nil.
 function Wire.decode(msg, sender)
   if type(msg) ~= "string" or #msg > 255 then return nil end
   local f = split(msg)
   local kind, version = f[1], f[2]
   if version ~= Wire.VERSION then return nil end
-  if kind == "R" and #f == 8 then
+  if (kind == "R" or kind == "T") and #f == 8 then
     local r = record(sender, f, 3)
-    return r and "R", r
+    return r and kind, r
   elseif kind == "S" and #f == 9 then
     if f[3] == "" or f[3]:find("[%s|]") then return nil end
     local r = record(f[3], f, 4)

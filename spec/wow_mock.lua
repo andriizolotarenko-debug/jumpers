@@ -6,6 +6,7 @@ local Mock = {}
 local clock = 100
 local timers = {}
 local frames = {}
+Mock.frames = frames
 local eventFrames = {}
 
 local function noop() end

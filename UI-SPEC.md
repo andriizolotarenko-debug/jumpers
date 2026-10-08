@@ -250,6 +250,9 @@ setting picks one (the slider moves in 25 % steps):
     streak as a small copy of the counter's ribbon (band 16 px, tails and folds, gold
     trim, tier colour, rainbow from x1000), and when it was set ("12 min ago", "3 h ago", "yesterday", "Oct 07").
   - Your own row highlighted in gold. Wheel scrolls the list.
+  - Your own place is pinned under the list, outside the scroll: rank, name, best and when.
+    Past the 50 shown it reads "50+" (we only know part of the realm), and "-" with
+    "no streak above x10 yet" when you have none in the period.
   - `/jumpers demoboard` toggles a sample board of made-up players for store screenshots.
     It is only drawn, never stored or sent.
   - An empty state, and a footer saying how records are shared (guild, channel) and that

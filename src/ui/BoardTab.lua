@@ -172,10 +172,44 @@ local function classColor(class)
   return 0.85, 0.85, 0.85
 end
 
+local function makeRow(parent)
+  local row = CreateFrame("Frame", nil, parent)
+  row:SetSize(W, ROW)
+  row.zebra = row:CreateTexture(nil, "BACKGROUND")
+  row.zebra:SetAllPoints()
+  row.mine = row:CreateTexture(nil, "BACKGROUND", nil, 1)
+  row.mine:SetAllPoints()
+  row.mine:SetColorTexture(1, 0.82, 0.2, 0.14)
+  row.rank = ns.Window.Number(row, 15)
+  row.rank:SetPoint("LEFT", COLS.rank, 0)
+  row.rank:SetWidth(36)
+  row.rank:SetJustifyH("LEFT")
+  row.name = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+  row.name:SetPoint("LEFT", COLS.player, 0)
+  row.best = badge(row)
+  row.best:SetPoint("RIGHT", row, "LEFT", COLS.best - 10, 1)
+  row.when = ns.Window.Note(row)
+  row.when:SetPoint("RIGHT", row, "LEFT", COLS.when, 0)
+  return row
+end
+
+-- rank: a number, "50+" past the list, or nil when the player has no streak in the period.
+local function fill(row, r, rank, online, me)
+  local medal = type(rank) == "number" and MEDALS[rank]
+  row.rank:SetText(rank or "-")
+  if medal then row.rank:SetTextColor(medal[1], medal[2], medal[3]) else row.rank:SetTextColor(0.6, 0.6, 0.6) end
+  row.name:SetText(ns.Comm.Short(r.p) .. (online[r.p] and (" " .. DOT) or ""))
+  row.name:SetTextColor(classColor(r.c))
+  row.best:SetShown(r.n ~= nil)
+  if r.n then setBadge(row.best, r.n) end
+  row.when:SetText(r.e and ago(r.e) or "no streak above x10 yet")
+  row.mine:SetShown(r.p == me)
+end
+
 local function buildRows(card)
   local scroll = CreateFrame("ScrollFrame", nil, card)
   scroll:SetPoint("TOPLEFT", card, "TOPLEFT", 0, -30)
-  scroll:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", 0, 4)
+  scroll:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", 0, ROW + 10)
   local content = CreateFrame("Frame", nil, scroll)
   content:SetSize(W, ROW * MAX_ROWS)
   scroll:SetScrollChild(content)
@@ -187,27 +221,20 @@ local function buildRows(card)
   ui.scroll, ui.content = scroll, content
   ui.rows = {}
   for i = 1, MAX_ROWS do
-    local row = at(CreateFrame("Frame", nil, content), content, 0, -(i - 1) * ROW)
-    row:SetSize(W, ROW)
-    row.zebra = row:CreateTexture(nil, "BACKGROUND")
-    row.zebra:SetAllPoints()
+    local row = at(makeRow(content), content, 0, -(i - 1) * ROW)
     row.zebra:SetColorTexture(1, 1, 1, i % 2 == 0 and 0.03 or 0)
-    row.mine = row:CreateTexture(nil, "BACKGROUND", nil, 1)
-    row.mine:SetAllPoints()
-    row.mine:SetColorTexture(1, 0.82, 0.2, 0.14)
-    row.rank = ns.Window.Number(row, 15)
-    row.rank:SetPoint("LEFT", COLS.rank, 0)
-    row.rank:SetWidth(30)
-    row.rank:SetJustifyH("LEFT")
-    row.name = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-    row.name:SetPoint("LEFT", COLS.player, 0)
-    row.best = badge(row)
-    row.best:SetPoint("RIGHT", row, "LEFT", COLS.best - 10, 1)
-    row.when = ns.Window.Note(row)
-    row.when:SetPoint("RIGHT", row, "LEFT", COLS.when, 0)
     row:Hide()
     ui.rows[i] = row
   end
+
+  -- your own place, pinned under the list so it never needs a scroll
+  local sep = card:CreateTexture(nil, "ARTWORK")
+  sep:SetColorTexture(0.55, 0.45, 0.28, 0.35)
+  sep:SetHeight(1)
+  sep:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 10, ROW + 7)
+  sep:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -10, ROW + 7)
+  ui.pinned = makeRow(card)
+  ui.pinned:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 0, 4)
 end
 
 function BoardTab.Build(page)
@@ -241,7 +268,7 @@ function BoardTab.Build(page)
   sep:SetPoint("TOPRIGHT", card, "TOPRIGHT", -10, -26)
   buildRows(card)
   ui.empty = W_.Note(card)
-  ui.empty:SetPoint("CENTER", card, "CENTER", 0, 10)
+  ui.empty:SetPoint("CENTER", card, "CENTER", 0, 24)
   ui.empty:SetWidth(440)
   ui.empty:SetJustifyH("CENTER")
 
@@ -272,19 +299,20 @@ function BoardTab.Refresh()
   local realm = GetRealmName and GetRealmName() or ""
   ui.sub:SetText(string.format("%s \194\183 %d with Jumpers online", realm, count))
 
+  local myRank, myRec
+  for i, r in ipairs(list) do
+    if r.p == me then myRank, myRec = i, r; break end
+  end
   for i, row in ipairs(ui.rows) do
     local r = list[i]
     row:SetShown(r ~= nil)
-    if r then
-      local medal = MEDALS[i]
-      row.rank:SetText(i)
-      if medal then row.rank:SetTextColor(medal[1], medal[2], medal[3]) else row.rank:SetTextColor(0.6, 0.6, 0.6) end
-      row.name:SetText(ns.Comm.Short(r.p) .. (online[r.p] and (" " .. DOT) or ""))
-      row.name:SetTextColor(classColor(r.c))
-      setBadge(row.best, r.n)
-      row.when:SetText(ago(r.e))
-      row.mine:SetShown(r.p == me)
-    end
+    if r then fill(row, r, i, online, me) end
+  end
+  ui.pinned:SetShown(me ~= nil)
+  if me then
+    -- past the list we only know a part of the realm, so the place is "50+", not a number
+    local rank = myRank and (myRank > MAX_ROWS and (MAX_ROWS .. "+") or myRank)
+    fill(ui.pinned, myRec or { p = me, c = select(2, UnitClass("player")) }, rank, online, me)
   end
   ui.content:SetHeight(math.max(1, math.min(#list, MAX_ROWS)) * ROW)
 
