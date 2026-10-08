@@ -15,8 +15,21 @@ local function volumeText(v)
   return v <= 0 and "Off" or (v .. "%")
 end
 
+local REDUCED_NOTE = "No lightning, sparks or rays. Colours and the shine stay."
+local PLAIN_NOTE = "Just the xN count: no ribbon, animations, effects or milestone captions."
+
+-- The preview follows "Number only" like the real counter.
+local function pickPreview()
+  local want = ns.Settings.Get("plain") and ui.plainPreview or ui.fancyPreview
+  if want ~= ui.preview then
+    if ui.preview then ui.preview:Hide() end
+    ui.preview = want
+  end
+end
+
 local function showPreview()
   if sample then return end
+  pickPreview()
   ui.preview:SetUserScale(ns.Settings.Get("size") / 100)
   ui.preview:SetReduced(ns.Settings.Get("reduced"))
   ui.preview:ShowStatic(37)
@@ -25,6 +38,7 @@ end
 local function playSample()
   if sample then sample:Cancel() end
   local i = 0
+  pickPreview()
   ui.preview:SetUserScale(ns.Settings.Get("size") / 100)
   sample = C_Timer.NewTicker(0.2, function()
     i = i + 1
@@ -87,7 +101,8 @@ function SettingsTab.Build(page)
   at(W_.Note(page, "While unlocked, drag the counter to move it."), page, 2, -112)
 
   ui.reduced = at(W_.Check(page, "Reduced effects", function(v) S.Set("reduced", v) end), page, -2, -130)
-  at(W_.Note(page, "No lightning, sparks or rays. Colours and the shine stay."), page, 2, -156)
+  ui.plain = at(W_.Check(page, "Number only", function(v) S.Set("plain", v) end), page, 168, -130)
+  ui.effectsNote = at(W_.Note(page, REDUCED_NOTE), page, 2, -156)
 
   -- preview
   local box = CreateFrame("Frame", nil, page)
@@ -104,8 +119,10 @@ function SettingsTab.Build(page)
   glow:SetPoint("CENTER", box, "CENTER", 0, -8)
   W_.Border(box, 0.55, 0.45, 0.28, 0.45)
   ui.box = box
-  ui.preview = ns.Counter.New(box)
-  ui.preview.root:SetPoint("CENTER", box, "CENTER", 0, -4)
+  ui.fancyPreview = ns.Counter.New(box)
+  ui.fancyPreview.root:SetPoint("CENTER", box, "CENTER", 0, -4)
+  ui.plainPreview = ns.PlainCounter.New(box)
+  ui.plainPreview.root:SetPoint("CENTER", box, "CENTER", 0, -4)
   local play = W_.Button(page, "Play sample streak", PREVIEW_W, playSample)
   play:SetPoint("TOP", box, "BOTTOM", 0, -6)
 
@@ -163,7 +180,11 @@ function SettingsTab.Build(page)
   box:SetScript("OnShow", showPreview)
   page:SetScript("OnShow", SettingsTab.Refresh)
   ns.On("SETTINGS", function(key)
-    if (key == "size" or key == "reduced") and box:IsVisible() and not sample then showPreview() end
+    if key == "plain" then
+      ui.reduced:SetEnabled(not S.Get("plain"))
+      ui.effectsNote:SetText(S.Get("plain") and PLAIN_NOTE or REDUCED_NOTE)
+    end
+    if (key == "size" or key == "reduced" or key == "plain") and box:IsVisible() and not sample then showPreview() end
   end)
 end
 
@@ -174,6 +195,9 @@ function SettingsTab.Refresh()
   ui.sizeValue:SetText(S.Get("size") .. "%")
   ui.unlock:SetChecked(S.Get("unlocked"))
   ui.reduced:SetChecked(S.Get("reduced"))
+  ui.reduced:SetEnabled(not S.Get("plain"))
+  ui.plain:SetChecked(S.Get("plain"))
+  ui.effectsNote:SetText(S.Get("plain") and PLAIN_NOTE or REDUCED_NOTE)
   ui.volume:SetSilently(S.Get("volume"))
   ui.volValue:SetText(volumeText(S.Get("volume")))
   ui.units:Select(S.Units())

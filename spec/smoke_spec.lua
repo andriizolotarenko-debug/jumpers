@@ -202,6 +202,25 @@ describe("addon on a mocked client", function()
     ns.Window.Toggle()
   end)
 
+  it("shows just the number in Number only mode", function()
+    ns.Settings.Set("plain", true)
+    assert.equal(ns.PlainCounter, getmetatable(ns.CounterUI.counter))
+    Mock.moving = true
+    Mock.fire("PLAYER_STARTED_MOVING")
+    for _ = 1, 12 do Mock.jump() end
+    local c = ns.CounterUI.counter
+    assert.is_true(c.root:IsShown()); assert.equal("x12", c.text:GetText())
+    Mock.moving = false
+    Mock.fire("PLAYER_STOPPED_MOVING")
+    Mock.advance(6)
+    assert.is_false(c.root:IsShown())
+    ns.Window.Show("settings")
+    ns.SettingsTab.Refresh()
+    ns.Window.Toggle()
+    ns.Settings.Set("plain", false)
+    assert.equal(ns.Counter, getmetatable(ns.CounterUI.counter))
+  end)
+
   it("resets progress", function()
     assert.is_true(ns.char.jumps > 0)
     ns.ResetProgress()

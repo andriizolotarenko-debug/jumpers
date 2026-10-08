@@ -5,6 +5,7 @@ local CounterUI = {}
 ns.CounterUI = CounterUI
 
 local holder, counter, dragHint
+local fancy, plain
 local demo = false
 
 local function applyPos()
@@ -13,7 +14,18 @@ local function applyPos()
   holder:SetPoint("CENTER", UIParent, "CENTER", p.x, p.y)
 end
 
+-- The counter in use: the ribbon, or "Number only".
+local function pick()
+  local want = ns.Settings.Get("plain") and plain or fancy
+  if want ~= counter then
+    if counter then counter:Hide() end
+    counter = want
+    CounterUI.counter = counter
+  end
+end
+
 local function applySettings()
+  pick()
   counter:SetUserScale(ns.Settings.Get("size") / 100)
   counter:SetReduced(ns.Settings.Get("reduced"))
   local unlocked = ns.Settings.Get("unlocked")
@@ -52,9 +64,10 @@ function CounterUI.Init()
   label:SetText("Drag the counter, then lock it in /jumpers")
   dragHint:Hide()
 
-  counter = ns.Counter.New(holder)
-  counter.root:SetPoint("CENTER")
-  CounterUI.counter = counter
+  fancy = ns.Counter.New(holder)
+  fancy.root:SetPoint("CENTER")
+  plain = ns.PlainCounter.New(holder)
+  plain.root:SetPoint("CENTER")
   CounterUI.holder = holder
 
   applyPos()
@@ -85,7 +98,7 @@ function CounterUI.Init()
   end)
   ns.On("SETTINGS", function(key)
     if key == "pos" then applyPos() return end
-    if key == "size" or key == "reduced" or key == "unlocked" or key == "show" then
+    if key == "size" or key == "reduced" or key == "plain" or key == "unlocked" or key == "show" then
       if key == "show" and not ns.Settings.Get("show") then counter:Hide() end
       applySettings()
     end

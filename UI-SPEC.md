@@ -267,7 +267,8 @@ setting picks one (the slider moves in 25 % steps):
     relayed records stay hidden until two players confirm them.
 - **Settings** (R6.3):
   - The addon version, small and grey, in the top right corner.
-  - Counter group (show, size slider with steppers, unlock + reset, reduced effects),
+  - Counter group (show, size slider with steppers, unlock + reset, reduced effects, and
+    "Number only": just xN in the tier colour, no ribbon, animations, effects or captions),
     with a live preview of the counter beside it and a "Play sample streak" button.
   - Sound volume slider ("Off" at 0%).
   - Progress: a "Reset progress" button (with a confirmation) that clears character and

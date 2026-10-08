@@ -16,6 +16,7 @@ Settings.DEFAULTS = {
   unlocked = false,
   pos = nil,           -- { x, y } offset from screen centre
   reduced = false,
+  plain = false,       -- "Number only": just xN, no ribbon, animations or captions
   volume = 0,          -- percent, 0 = off
   units = nil,         -- "m" | "ft"; nil = by region
   minimap = { hide = false },

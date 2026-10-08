@@ -28,6 +28,7 @@ src\Core.lua
 src\Detector.lua
 src\net\Comm.lua
 src\ui\Counter.lua
+src\ui\PlainCounter.lua
 src\ui\CounterUI.lua
 src\ui\Caption.lua
 src\ui\Window.lua

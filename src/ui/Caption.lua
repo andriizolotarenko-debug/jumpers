@@ -72,6 +72,6 @@ function Caption.Init()
   frame:SetScript("OnUpdate", update)
 
   ns.On("MILESTONE", function(index)
-    if ns.Settings.Get("show") then Caption.Show(index) end
+    if ns.Settings.Get("show") and not ns.Settings.Get("plain") then Caption.Show(index) end
   end)
 end
