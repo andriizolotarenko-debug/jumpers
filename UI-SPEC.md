@@ -232,7 +232,9 @@ setting picks one (the slider moves in 25 % steps):
 - **Frame:**
   - A portrait frame with the addon icon in the round portrait at the top left.
   - The title "Jumpers" and a close button.
-  - Three tabs at the bottom: **Personal Stats**, **Leaderboard**, **Settings**.
+  - Three tabs at the bottom: **Personal Stats**, **Leaderboard**, **Settings**. Our own
+    buttons, together as wide as the window (same look on every client); the selected one
+    has a gold edge, a warm glow and white text.
 - **Personal Stats:**
   - A **Character / Account** toggle, and a **Tell a friend** button beside it that fills
     the chat box with your height, best streak and the CurseForge link (you press Enter).

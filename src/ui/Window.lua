@@ -219,6 +219,40 @@ end
 
 -- ---------- window ----------
 
+-- ---------- tabs: our own, as wide as the window, the same on every client ----------
+
+local TAB_H, TAB_GAP, TAB_INSET = 34, 4, 10
+
+local function makeTab(label)
+  local b = CreateFrame("Button", nil, frame)
+  b:SetHeight(TAB_H)
+  local bg = b:CreateTexture(nil, "BACKGROUND")
+  bg:SetAllPoints()
+  bg:SetColorTexture(0.1, 0.09, 0.08, 0.97)
+  b.glow = b:CreateTexture(nil, "ARTWORK")
+  b.glow:SetPoint("TOPLEFT", 1, -1)
+  b.glow:SetPoint("BOTTOMRIGHT", -1, 1)
+  b.glow:SetColorTexture(1, 1, 1, 1)
+  local ok = CreateColor and b.glow.SetGradient and pcall(b.glow.SetGradient, b.glow, "VERTICAL",
+    CreateColor(0.85, 0.6, 0.15, 0.55), CreateColor(0.85, 0.6, 0.15, 0.05))
+  if not ok then b.glow:SetColorTexture(0.85, 0.6, 0.15, 0.3) end
+  local hl = b:CreateTexture(nil, "HIGHLIGHT")
+  hl:SetAllPoints()
+  hl:SetColorTexture(1, 0.9, 0.6, 0.07)
+  b.edges = border(b, 0.55, 0.45, 0.28, 0.6)
+  b.label = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  b.label:SetPoint("CENTER", 0, 1)
+  b.label:SetText(label)
+  return b
+end
+
+local function paintTab(b, selected)
+  b.glow:SetShown(selected)
+  local e = selected and { 1, 0.82, 0.3, 0.95 } or { 0.55, 0.45, 0.28, 0.6 }
+  for _, edge in ipairs(b.edges) do edge:SetColorTexture(e[1], e[2], e[3], e[4]) end
+  if selected then b.label:SetTextColor(1, 1, 1) else b.label:SetTextColor(GOLD[1], GOLD[2], GOLD[3]) end
+end
+
 local function create()
   frame = try("PortraitFrameTemplate", "Frame", "JumpersWindow", UIParent)
     or try("BasicFrameTemplateWithInset", "Frame", "JumpersWindow", UIParent)
@@ -274,25 +308,17 @@ local function create()
     page:Hide()
     pages[p.key] = page
 
-    local tab = try("PanelTabButtonTemplate", "Button", "JumpersWindowTab" .. i, frame)
-    if tab then
-      tab:SetText(p.label)
-      if PanelTemplates_TabResize then pcall(PanelTemplates_TabResize, tab, 0) end
-    else
-      tab = Window.Button(frame, p.label, 140, nil)
-    end
-    tab:SetID(i)
+    local tab = makeTab(p.label)
     tab:SetScript("OnClick", function() Window.Select(p.key) end)
-    if i == 1 then
-      tab:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 12, 2)
-    else
-      tab:SetPoint("LEFT", tabs[i - 1], "RIGHT", 2, 0)
-    end
     tabs[i] = tab
   end
-  frame.Tabs = tabs
-  frame.numTabs = #tabs
-  if PanelTemplates_SetNumTabs then pcall(PanelTemplates_SetNumTabs, frame, #tabs) end
+  -- equal widths across the window: left edge of tab i at i-1 widths plus gaps
+  local n = #PAGES
+  local w = (640 - 2 * TAB_INSET - (n - 1) * TAB_GAP) / n
+  for i, tab in ipairs(tabs) do
+    tab:SetWidth(w)
+    tab:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", TAB_INSET + (i - 1) * (w + TAB_GAP), 1)
+  end
 
   ns.StatsTab.Build(pages.stats)
   ns.BoardTab.Build(pages.board)
@@ -304,7 +330,7 @@ function Window.Select(key)
   current = key
   for i, p in ipairs(PAGES) do
     pages[p.key]:SetShown(p.key == key)
-    if p.key == key and PanelTemplates_SetTab then pcall(PanelTemplates_SetTab, frame, i) end
+    paintTab(tabs[i], p.key == key)
   end
 end
 
