@@ -59,6 +59,14 @@ local function buildHeader(c)
     { label = "Account", value = "account" },
   }, 84, function(v) scope = v; StatsTab.Refresh() end)
   ui.scope.box:SetPoint("TOPRIGHT", c, "TOPRIGHT", -2, -4)
+  ui.tell = W_.Button(c, "Tell a friend", 110, function()
+    local s, U = stats(), ns.Units
+    local height = U.format(U.heightM(s.jumps), ns.Settings.Units())
+    ns.Share.Tell(s.best > 0
+      and string.format("I've climbed %s jumping with the Jumpers addon, best streak x%d. Can you beat it?", height, s.best)
+      or string.format("I've climbed %s jumping with the Jumpers addon. Can you beat it?", height))
+  end)
+  ui.tell:SetPoint("RIGHT", ui.scope.box, "LEFT", -10, 0)
 end
 
 local function buildHeight(c)

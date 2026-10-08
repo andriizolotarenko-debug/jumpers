@@ -101,4 +101,14 @@ describe("Board", function()
     Board.prune(s, DAY, NOW)
     assert.is_nil(next(s.records)); assert.is_nil(next(s.pending))
   end)
+
+  it("remembers peers, forgets the oldest and the long gone", function()
+    local s = Board.ensure()
+    for i = 1, Board.PEERS_MAX + 1 do Board.notePeer(s, "P" .. i, NOW + i) end
+    assert.is_nil(s.peers.P1); assert.equal(NOW + 2, s.peers.P2)
+    assert.same({ "P201", "P199" }, Board.peersToAsk(s, { P200 = true }, 2))
+    s.peers.P2 = NOW - Board.PEERS_KEEP - 1
+    Board.prune(s, DAY, NOW)
+    assert.is_nil(s.peers.P2); assert.is_not_nil(s.peers.P3)
+  end)
 end)

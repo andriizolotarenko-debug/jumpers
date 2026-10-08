@@ -97,6 +97,7 @@ function Object:GetValue() return self.value or 0 end
 function Object:SetChecked(v) self.checked = v and true or false end
 function Object:GetChecked() return self.checked end
 function Object:GetFontString() self.fs = self.fs or new("FontString", self); return self.fs end
+function Object:HighlightText() self.highlighted = true end
 function Object:Click() if self.scripts.OnClick then self.scripts.OnClick(self, "LeftButton") end end
 function Object:RegisterEvent(e) eventFrames[e] = eventFrames[e] or {}; table.insert(eventFrames[e], self) end
 function Object:SetScrollChild(c) self.child = c end
@@ -111,7 +112,8 @@ function Object:GetStatusBarTexture() self.sbt = self.sbt or new("Texture", self
 local function install()
   _G.CreateFrame = function(kind, name, parent, template)
     if template and template ~= "UIPanelButtonTemplate" and template ~= "UICheckButtonTemplate"
-      and template ~= "UIPanelScrollFrameTemplate" and template ~= "PanelTabButtonTemplate" then
+      and template ~= "UIPanelScrollFrameTemplate" and template ~= "PanelTabButtonTemplate"
+      and template ~= "UIPanelCloseButton" then
       error("unknown template " .. tostring(template))
     end
     local f = new(kind, parent)
@@ -153,15 +155,33 @@ local function install()
   _G.IsInGuild = function() return true end
   _G.GetChannelName = function() return Mock.joined and 5 or 0 end
   _G.JoinTemporaryChannel = function() Mock.joined = true end
+  _G.LeaveChannelByName = function() Mock.joined = false end
+  _G.IsInRaid = function() return Mock.group == "RAID" end
+  _G.IsInGroup = function() return Mock.group ~= nil end
+  _G.WOW_PROJECT_MAINLINE, _G.WOW_PROJECT_CLASSIC, _G.WOW_PROJECT_BURNING_CRUSADE_CLASSIC = 1, 2, 5
+  _G.WOW_PROJECT_ID = Mock.project or 1
+  _G.ERR_CHAT_PLAYER_NOT_FOUND_S = "No player named '%s' is currently playing."
+  Mock.filters = {}
+  _G.ChatFrame_AddMessageEventFilter = function(event, fn) Mock.filters[event] = fn end
+  _G.ChatFrame_OpenChat = function(text) Mock.chat = text end
+  _G.IsControlKeyDown = function() return false end
   _G.ChatFrame_RemoveChannel = noop
   _G.RAID_CLASS_COLORS = { HUNTER = { r = 0.67, g = 0.83, b = 0.45 } }
-  Mock.sent = {}
+  Mock.sent, Mock.routes = {}, {}
+  -- the game echoes addon messages to the sender; Mock.echo lists the routes that do
+  Mock.echo = Mock.echo or { GUILD = true, CHANNEL = true, PARTY = true, RAID = true, WHISPER = true }
   _G.C_ChatInfo = {
     RegisterAddonMessagePrefix = function() return true end,
-    SendAddonMessage = function(prefix, msg, target, ch)
+    SendAddonMessage = function(prefix, msg, target, to)
       assert(prefix == "JMPR" and #msg <= 255)
-      assert(target == "GUILD" or (target == "CHANNEL" and ch == 5))
+      assert(target == "GUILD" or (target == "CHANNEL" and to == 5) or (target == "PARTY" and Mock.group)
+        or (target == "RAID" and Mock.group == "RAID") or (target == "WHISPER" and type(to) == "string"))
       table.insert(Mock.sent, msg)
+      table.insert(Mock.routes, { msg = msg, target = target, to = to })
+      if Mock.echo[target] and (target ~= "WHISPER" or to == "Tester-TestRealm") then
+        table.insert(timers, { at = clock + 0.5, once = true,
+          fn = function() Mock.fire("CHAT_MSG_ADDON", prefix, msg, target, "Tester") end })
+      end
       return true
     end,
   }
@@ -186,7 +206,8 @@ local function install()
   _G.print = noop
 end
 
-function Mock.load(toc)
+function Mock.load(toc, project)
+  Mock.project = project
   install()
   local ns = {}
   for line in io.lines(toc) do

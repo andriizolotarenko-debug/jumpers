@@ -7,6 +7,8 @@ ns.BoardTab = BoardTab
 local W = 600
 local ROW = 26
 local MAX_ROWS = 50
+local CARD_H = 380
+local VIEW = CARD_H - 34                -- list height when your place is not pinned
 local COLS = { rank = 14, player = 52, best = 420, when = W - 16 }
 local DOT = "|TInterface\\FriendsFrame\\StatusIcon-Online:10:10:0:0|t"
 local PERIODS = {
@@ -206,10 +208,66 @@ local function fill(row, r, rank, online, me)
   row.mine:SetShown(r.p == me)
 end
 
+-- Shows your place pinned under the list only while your own row is out of sight.
+local function updatePinned()
+  local top = ui.scroll:GetVerticalScroll()
+  local rank = ui.myRank
+  local inView = rank and rank <= MAX_ROWS and (rank - 1) * ROW >= top - 1 and rank * ROW <= top + VIEW + 1
+  local show = ui.me ~= nil and ui.count > 0 and not inView
+  ui.pinned:SetShown(show)
+  ui.pinSep:SetShown(show)
+  ui.scroll:ClearAllPoints()
+  ui.scroll:SetPoint("TOPLEFT", ui.card, "TOPLEFT", 0, -30)
+  ui.scroll:SetPoint("BOTTOMRIGHT", ui.card, "BOTTOMRIGHT", 0, show and (ROW + 10) or 4)
+end
+
+local function buildTail(content)
+  local W_ = ns.Window
+  local tail = CreateFrame("Frame", nil, content)
+  tail:SetSize(W, 1)
+  ui.tail = tail
+  ui.empty = W_.Note(tail)
+  ui.empty:SetWidth(460)
+  ui.empty:SetJustifyH("CENTER")
+  ui.classic = W_.Note(tail)
+  ui.classic:SetWidth(520)
+  ui.classic:SetJustifyH("CENTER")
+  ui.invite = tail:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+  ui.invite:SetText("The more friends run Jumpers, the more fun the board gets.")
+  ui.copy = W_.Button(tail, "Copy link", 120, function() ns.Share.CopyLink() end)
+  ui.tell = W_.Button(tail, "Tell a friend", 120, function()
+    local mine = ui.myRec
+    ns.Share.Tell(mine and string.format("Jump with me! My best streak is x%d on the Jumpers leaderboard. Get it:", mine.n)
+      or "Jump with me! I chain jumps into streaks with the Jumpers addon. Get it:")
+  end)
+end
+
+-- Lays the empty note, the Classic note and the invite out under the last row.
+local function layoutTail(count)
+  local y = 0
+  local function place(region, h, x)
+    region:ClearAllPoints()
+    region:SetPoint("TOP", ui.tail, "TOP", x or 0, -y)
+    y = y + h
+  end
+  ui.tail:ClearAllPoints()
+  ui.tail:SetPoint("TOPLEFT", ui.content, "TOPLEFT", 0, -(count * ROW) - 14)
+  for _, fs in ipairs({ ui.empty, ui.classic }) do
+    if fs:IsShown() then place(fs, fs:GetStringHeight() + 12) end
+  end
+  place(ui.invite, 22)
+  ui.copy:ClearAllPoints()
+  ui.copy:SetPoint("TOPRIGHT", ui.tail, "TOP", -4, -y)
+  ui.tell:ClearAllPoints()
+  ui.tell:SetPoint("TOPLEFT", ui.tail, "TOP", 4, -y)
+  y = y + 26
+  ui.tail:SetHeight(y)
+  ui.content:SetHeight(count * ROW + 14 + y + 8)
+end
+
 local function buildRows(card)
+  ui.card = card
   local scroll = CreateFrame("ScrollFrame", nil, card)
-  scroll:SetPoint("TOPLEFT", card, "TOPLEFT", 0, -30)
-  scroll:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", 0, ROW + 10)
   local content = CreateFrame("Frame", nil, scroll)
   content:SetSize(W, ROW * MAX_ROWS)
   scroll:SetScrollChild(content)
@@ -217,6 +275,7 @@ local function buildRows(card)
   scroll:SetScript("OnMouseWheel", function(self, delta)
     local maxScroll = math.max(0, content:GetHeight() - self:GetHeight())
     self:SetVerticalScroll(math.min(maxScroll, math.max(0, self:GetVerticalScroll() - delta * ROW * 3)))
+    updatePinned()
   end)
   ui.scroll, ui.content = scroll, content
   ui.rows = {}
@@ -226,13 +285,15 @@ local function buildRows(card)
     row:Hide()
     ui.rows[i] = row
   end
+  buildTail(content)
 
-  -- your own place, pinned under the list so it never needs a scroll
+  -- your own place, pinned under the list while your row is out of sight
   local sep = card:CreateTexture(nil, "ARTWORK")
   sep:SetColorTexture(0.55, 0.45, 0.28, 0.35)
   sep:SetHeight(1)
   sep:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 10, ROW + 7)
   sep:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -10, ROW + 7)
+  ui.pinSep = sep
   ui.pinned = makeRow(card)
   ui.pinned:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 0, 4)
 end
@@ -248,7 +309,7 @@ function BoardTab.Build(page)
   ui.online = W_.Check(page, "Players online", function(v) onlineOnly = v; BoardTab.Refresh() end)
   ui.online:SetPoint("TOPRIGHT", page, "TOPRIGHT", -110, -47)
 
-  local card = at(W_.Card(page, W, 380), page, 0, -82)
+  local card = at(W_.Card(page, W, CARD_H), page, 0, -82)
   local heads = {
     { "#", "LEFT", COLS.rank }, { "Player", "LEFT", COLS.player },
     { "Best streak", "RIGHT", COLS.best }, { "When", "RIGHT", COLS.when },
@@ -267,10 +328,6 @@ function BoardTab.Build(page)
   sep:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -26)
   sep:SetPoint("TOPRIGHT", card, "TOPRIGHT", -10, -26)
   buildRows(card)
-  ui.empty = W_.Note(card)
-  ui.empty:SetPoint("CENTER", card, "CENTER", 0, 24)
-  ui.empty:SetWidth(440)
-  ui.empty:SetJustifyH("CENTER")
 
   ui.foot = at(W_.Note(page), page, 2, -470)
   ui.foot:SetWidth(W)
@@ -308,24 +365,34 @@ function BoardTab.Refresh()
     row:SetShown(r ~= nil)
     if r then fill(row, r, i, online, me) end
   end
-  ui.pinned:SetShown(me ~= nil)
+  ui.me, ui.myRank, ui.myRec, ui.count = me, myRank, myRec, #list
   if me then
     -- past the list we only know a part of the realm, so the place is "50+", not a number
     local rank = myRank and (myRank > MAX_ROWS and (MAX_ROWS .. "+") or myRank)
     fill(ui.pinned, myRec or { p = me, c = select(2, UnitClass("player")) }, rank, online, me)
   end
-  ui.content:SetHeight(math.max(1, math.min(#list, MAX_ROWS)) * ROW)
-
-  if #list == 0 then
-    ui.empty:SetText(onlineOnly and "Nobody online has a streak above x10 in this period yet."
-      or "No streaks yet. Streaks above x10 show up here: yours, and everyone's on your realm who runs Jumpers.")
-    ui.empty:Show()
-  else
-    ui.empty:Hide()
-  end
 
   local st = ns.Comm.status
-  local via = st.channel and (st.guild and "your guild and the Jumpers channel" or "the Jumpers channel")
-    or (st.guild and "your guild only" or "nobody yet: no guild, and the channel is unavailable")
+  ui.empty:SetShown(#list == 0)
+  ui.empty:SetText(onlineOnly and "Nobody online has a streak above x10 in this period yet."
+    or "No streaks yet. Streaks above x10 show up here: yours, and everyone's on your realm who runs Jumpers.")
+  ui.classic:SetShown(ns.Comm.Fallback())
+  ui.classic:SetText((st.channelState == "off" and "Classic clients" or "This client")
+    .. " can't share records through a realm-wide channel, so they travel through your guild, your group"
+    .. " and players you've met. Jumpers works best in a guild.")
+  layoutTail(math.min(#list, MAX_ROWS))
+  local maxScroll = math.max(0, ui.content:GetHeight() - VIEW)
+  if ui.scroll:GetVerticalScroll() > maxScroll then ui.scroll:SetVerticalScroll(maxScroll) end
+  updatePinned()
+
+  local routes = {}
+  if st.guild then routes[#routes + 1] = "your guild" end
+  if st.channelState == "ok" then routes[#routes + 1] = "the Jumpers channel" end
+  if st.channelState == "probing" then routes[#routes + 1] = "the Jumpers channel (connecting)" end
+  if ns.Comm.Fallback() then
+    routes[#routes + 1] = "your group"
+    routes[#routes + 1] = "players you've met"
+  end
+  local via = #routes > 1 and (table.concat(routes, ", ", 1, #routes - 1) .. " and " .. routes[#routes]) or routes[1]
   ui.foot:SetText("Shared live through " .. via .. ". Records relayed by others stay hidden until two players confirm them.")
 end

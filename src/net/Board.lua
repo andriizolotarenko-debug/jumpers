@@ -1,5 +1,8 @@
 -- PURE: the local copy of the leaderboard (R4, R5.4).
--- store = { records = { ["player:day"] = rec }, pending = { [key] = { rec, by = { relayer = true }, count, at } } }
+-- store = { records = { ["player:day"] = rec }, pending = { [key] = { rec, by = { relayer = true }, count, at } },
+--           peers = { [player] = last heard } }
+-- peers are the players we have met (group, whisper): where the realm channel is blocked
+-- (Classic clients), we sync with them by whisper.
 -- Records are confirmed when heard first-hand from the player, or relayed identically by
 -- QUORUM distinct peers. Unconfirmed records are never shown.
 local _, ns = ...
@@ -12,11 +15,14 @@ Board.PENDING_TTL = 3600   -- s an unconfirmed relay is kept
 Board.ONLINE_FOR = 600     -- s since last heard to count as online (R4.5)
 Board.KEEP_DAYS = 366
 Board.TIMEFRAMES = { today = 1, week = 7, month = 30, year = 365 }
+Board.PEERS_MAX = 200
+Board.PEERS_KEEP = 60 * 86400   -- s a peer we no longer hear from is remembered
 
 function Board.ensure(store)
   store = type(store) == "table" and store or {}
   store.records = type(store.records) == "table" and store.records or {}
   store.pending = type(store.pending) == "table" and store.pending or {}
+  store.peers = type(store.peers) == "table" and store.peers or {}
   return store
 end
 
@@ -117,6 +123,35 @@ function Board.prune(store, today, now)
   for key, p in pairs(store.pending) do
     if now - p.at > Board.PENDING_TTL then store.pending[key] = nil end
   end
+  for p, t in pairs(store.peers) do
+    if now - t > Board.PEERS_KEEP then store.peers[p] = nil end
+  end
+end
+
+-- Remembers a player we heard from; past PEERS_MAX the one heard longest ago is forgotten.
+function Board.notePeer(store, player, now)
+  store.peers[player] = now
+  local count, oldest = 0, nil
+  for p, t in pairs(store.peers) do
+    count = count + 1
+    if not oldest or t < store.peers[oldest] then oldest = p end
+  end
+  if count > Board.PEERS_MAX then store.peers[oldest] = nil end
+end
+
+-- Up to `limit` peers worth asking, most recently met first, leaving out `skip` (a set).
+function Board.peersToAsk(store, skip, limit)
+  local list = {}
+  for p, t in pairs(store.peers) do
+    if not skip[p] then list[#list + 1] = { p = p, t = t } end
+  end
+  table.sort(list, function(a, b)
+    if a.t ~= b.t then return a.t > b.t end
+    return a.p < b.p
+  end)
+  local out = {}
+  for i = 1, math.min(limit, #list) do out[i] = list[i].p end
+  return out
 end
 
 -- Online set: everyone heard within ONLINE_FOR seconds. heard = { [player] = time }.

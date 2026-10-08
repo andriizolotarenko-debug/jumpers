@@ -157,6 +157,17 @@ Exact look and timings: [UI-SPEC.md](UI-SPEC.md).
   libraries: messages are short plain text (`net/Wire`) and a queue sends one message per
   ~1.1 s to stay inside the server's addon-message allowance. A blocked or throttled send
   is retried a few times, then dropped; the board keeps working locally.
+- **Channel probe.** After joining, we send ourselves a `T` message on the channel: only the
+  game's echo proves it carries addon messages. No echo within 20 s (or an "invalid chat
+  type" result): leave the channel. Classic clients (Era, Anniversary and the other Classic
+  projects) block addon messages in custom channels since 1.13.3, so they never join.
+- **Fallback (no channel).** Broadcasts also go to the group (`PARTY`/`RAID`). Players heard
+  in a group or by whisper are remembered per realm (`peers`, up to 200, 60 days). Every
+  5 min we whisper `Q|1` to up to 5 of them not heard lately (each at most every 30 min); a
+  whispered `Q` is answered by whisper (heartbeat, top records, and a `Q` back), at most
+  once per 5 min per asker. Live records and heartbeats are whispered to online peers only
+  a whisper reaches (up to 10). The "No player named X" reply to a whisper to an offline
+  peer is hidden for 10 s after our whisper.
 - **Live record.** When a streak above x10 ends as the character's best of the realm day,
   it goes on our own board and out to peers:
   `R|1|class|n|endedAt (server epoch)|realmDay|duration|minGap` (R5.1). The sender is the
@@ -182,9 +193,10 @@ Exact look and timings: [UI-SPEC.md](UI-SPEC.md).
   timeframe (at most 25 messages), skips any record two others already relayed while it
   waited, and answers at most once per 5 min. Answers are broadcast, so everyone listening
   benefits from one request.
-- **Self-test.** `/jumpers selftest` sends `T|1|…` (a record shape) to the guild and the
-  channel and waits for the game's echo of our own message: it checks sending, the channel,
-  decoding and verification on one client. Other clients ignore `T`, so nothing is stored.
+- **Self-test.** `/jumpers selftest` sends `T|1|…` (a record shape) to the guild, the
+  channel, the group and a whisper to ourselves, and waits for the game's echo of each: it
+  checks sending, every route, decoding and verification on one client. Other clients
+  ignore `T`, so nothing is stored. It also re-probes a channel that failed.
 
 ## Testing
 

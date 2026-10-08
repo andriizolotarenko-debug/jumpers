@@ -234,7 +234,8 @@ setting picks one (the slider moves in 25 % steps):
   - The title "Jumpers" and a close button.
   - Three tabs at the bottom: **Personal Stats**, **Leaderboard**, **Settings**.
 - **Personal Stats:**
-  - A **Character / Account** toggle.
+  - A **Character / Account** toggle, and a **Tell a friend** button beside it that fills
+    the chat box with your height, best streak and the CurseForge link (you press Enter).
   - **Height climbed:** a big number (Changa One), "N jumps × 1.5 m".
   - A progress bar from the last landmark passed (with ✓) to the next one, with
     "Milestone k of 55 · p% there · N jumps to go".
@@ -250,12 +251,17 @@ setting picks one (the slider moves in 25 % steps):
     streak as a small copy of the counter's ribbon (band 16 px, tails and folds, gold
     trim, tier colour, rainbow from x1000), and when it was set ("12 min ago", "3 h ago", "yesterday", "Oct 07").
   - Your own row highlighted in gold. Wheel scrolls the list.
-  - Your own place is pinned under the list, outside the scroll: rank, name, best and when.
-    Past the 50 shown it reads "50+" (we only know part of the realm), and "-" with
-    "no streak above x10 yet" when you have none in the period.
+  - Your own place is pinned under the list, outside the scroll, only while your row is out
+    of sight: rank, name, best and when. Past the 50 shown it reads "50+" (we only know part
+    of the realm), and "-" with "no streak above x10 yet" when you have none in the period.
+  - Under the last row: the empty note, then on clients without the realm channel (Classic)
+    a note that records travel through guild, group and players you've met and that it works
+    best in a guild, then "The more friends run Jumpers, the more fun the board gets." with
+    **Copy link** (a box with the CurseForge link selected for Ctrl+C) and **Tell a friend**
+    (fills the chat box; nothing is sent automatically).
   - `/jumpers demoboard` toggles a sample board of made-up players for store screenshots.
     It is only drawn, never stored or sent.
-  - An empty state, and a footer saying how records are shared (guild, channel) and that
+  - A footer saying how records are shared (guild, channel, group, players you've met) and that
     relayed records stay hidden until two players confirm them.
 - **Settings** (R6.3):
   - Counter group (show, size slider with steppers, unlock + reset, reduced effects),

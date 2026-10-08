@@ -26,6 +26,9 @@ folder into the `Interface/AddOns/` folder of your game version:
 - `/jumpers` or the minimap button opens stats and settings.
 - `/jumpers demo` plays a sample streak on the counter.
 - `/jumpers selftest` checks that leaderboard messages go out and come back on your client.
+- The leaderboard shares records through your guild and a hidden realm channel. Classic clients
+  block addon channels, so there it uses your guild, your group and players you've met: it works
+  best in a guild.
 
 ## Develop
 

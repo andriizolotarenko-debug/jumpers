@@ -31,6 +31,7 @@ src\ui\Counter.lua
 src\ui\CounterUI.lua
 src\ui\Caption.lua
 src\ui\Window.lua
+src\ui\Share.lua
 src\ui\StatsTab.lua
 src\ui\BoardTab.lua
 src\ui\SettingsTab.lua

@@ -101,6 +101,10 @@ describe("addon on a mocked client", function()
     assert.is_true((Mock.sounds or 0) > 0)
     ns.Window.Select("stats")
     ns.StatsTab.Refresh()
+    for _, f in ipairs(Mock.frames) do
+      if f._text == "Tell a friend" and f:IsVisible() then f:Click() end
+    end
+    assert.truthy(Mock.chat:find("^I've climbed .+ x%d+%. Can you beat it%? curseforge"))
     Mock.advance(4)
     ns.Window.Toggle()
   end)
@@ -147,15 +151,27 @@ describe("addon on a mocked client", function()
     local echo
     for i = before + 1, #Mock.sent do if Mock.sent[i]:match("^T|1|") then echo = Mock.sent[i] end end
     assert.is_not_nil(echo)
-    Mock.fire("CHAT_MSG_ADDON", "JMPR", echo, "CHANNEL", "Tester-TestRealm")
-    Mock.fire("CHAT_MSG_ADDON", "JMPR", echo, "GUILD", "Tester")
     Mock.fire("CHAT_MSG_ADDON", "JMPR", echo, "CHANNEL", "Gus-TestRealm")      -- someone else's test
     Mock.advance(30)
     ns.Print = print0
     local text = table.concat(printed, "\n")
-    assert.truthy(text:find("channel echo after", 1, true)); assert.truthy(text:find("guild echo after", 1, true))
-    assert.truthy(text:find("decoded and verified", 1, true)); assert.falsy(text:find("no guild echo", 1, true))
+    for _, route in ipairs({ "channel", "guild", "whisper" }) do
+      assert.truthy(text:find(route .. " echo after", 1, true))
+    end
+    assert.truthy(text:find("decoded and verified", 1, true)); assert.falsy(text:find("no ", 1, true))
     assert.equal(3, #ns.Board.top(ns.board, ns.Today(), 1))
+
+    -- our row in sight: no pinned copy of it
+    local function mineShown()
+      local n = 0
+      for _, f in ipairs(Mock.frames) do
+        if type(f._text) == "string" and f._text:find("^Tester") and f:IsVisible() then n = n + 1 end
+      end
+      return n
+    end
+    ns.Window.Show("board")
+    ns.BoardTab.Refresh()
+    assert.equal(1, mineShown())
 
     -- past 50 players our place shows as "50+"
     for i = 1, 55 do
@@ -167,8 +183,19 @@ describe("addon on a mocked client", function()
     assert.is_true(online["Ann-TestRealm"]); assert.is_true(online["Tester-TestRealm"])
     ns.BoardTab.Refresh()
     local pinned = false
-    for _, f in ipairs(Mock.frames) do if f._text == "50+" then pinned = true end end
+    for _, f in ipairs(Mock.frames) do if f._text == "50+" and f:IsVisible() then pinned = true end end
     assert.is_true(pinned)
+    assert.equal(1, mineShown())
+    -- the invite under the list: a copyable link and a chat line the player sends themselves
+    local copy, tell
+    for _, f in ipairs(Mock.frames) do
+      local fs = f.fs and f.fs._text
+      if f._text == "Copy link" or fs == "Copy link" then copy = f end
+      if (f._text == "Tell a friend" or fs == "Tell a friend") and f:IsVisible() then tell = f end
+    end
+    copy:Click()
+    tell:Click()
+    assert.truthy(Mock.chat:find("curseforge.com/wow/addons/jumpers", 1, true))
     SlashCmdList.JUMPERS("demoboard")
     ns.BoardTab.Refresh()
     SlashCmdList.JUMPERS("demoboard")
