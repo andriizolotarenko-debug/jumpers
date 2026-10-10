@@ -23,6 +23,7 @@ read_globals = {
   "ChatFrameUtil", "ChatFrame_OpenChat", "IsControlKeyDown", "WOW_PROJECT_ID", "WOW_PROJECT_CLASSIC",
   "WOW_PROJECT_BURNING_CRUSADE_CLASSIC", "WOW_PROJECT_WRATH_CLASSIC", "WOW_PROJECT_CATACLYSM_CLASSIC",
   "WOW_PROJECT_MISTS_CLASSIC", "ChatFontNormal", "GameFontHighlight", "IsMetaKeyDown", "C_AddOns", "GetAddOnMetadata",
+  "GetNumGuildMembers", "GetGuildRosterInfo", "C_GuildInfo", "GuildRoster",
 }
 
 files["spec/"] = { std = "+busted" }

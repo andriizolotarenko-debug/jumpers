@@ -21,6 +21,7 @@ local MEDALS = { { 1, 0.82, 0.2 }, { 0.85, 0.88, 0.92 }, { 0.85, 0.55, 0.3 } }
 
 local period = 1
 local onlineOnly = false
+local guildOnly = false
 local demo = false
 local ui = {}
 
@@ -125,7 +126,7 @@ local DEMO = {
 
 local function demoList()
   local now = GetServerTime and GetServerTime() or time()
-  local list, online = {}, {}
+  local list, online, guild = {}, {}, {}
   local me = ns.Comm.Me()
   local mine = me and { p = me, c = select(2, UnitClass("player")), n = 233, e = now - 600 }
   local scale = period == 1 and 1 or (period == 7 and 1.15 or (period == 30 and 1.3 or 1.6))
@@ -134,15 +135,15 @@ local function demoList()
     local n = math.floor(d[3] * (i % 3 == 0 and scale or 1))
     list[#list + 1] = { p = p, c = d[2], n = n, e = now - d[4] * (period == 1 and 1 or 3) }
     if d[5] then online[p] = true end
+    if i % 2 == 1 then guild[p] = true end
   end
-  if mine then list[#list + 1] = mine; online[me] = true end
+  if mine then list[#list + 1] = mine; online[me] = true; guild[me] = true end
   table.sort(list, function(a, b) return a.n > b.n end)
-  if onlineOnly then
-    local only = {}
-    for _, r in ipairs(list) do if online[r.p] then only[#only + 1] = r end end
-    list = only
+  local only = {}
+  for _, r in ipairs(list) do
+    if (not onlineOnly or online[r.p]) and (not guildOnly or guild[r.p]) then only[#only + 1] = r end
   end
-  return list, online
+  return only, online
 end
 
 function BoardTab.ToggleDemo()
@@ -308,6 +309,12 @@ function BoardTab.Build(page)
   ui.period.box:SetPoint("TOPLEFT", page, "TOPLEFT", 0, -48)
   ui.online = W_.Check(page, "Players online", function(v) onlineOnly = v; BoardTab.Refresh() end)
   ui.online:SetPoint("TOPRIGHT", page, "TOPRIGHT", -110, -47)
+  ui.guild = W_.Check(page, "Guildmates only", function(v)
+    guildOnly = v
+    if v then ns.Comm.RequestRoster() end
+    BoardTab.Refresh()
+  end)
+  ui.guild:SetPoint("TOPRIGHT", page, "TOPRIGHT", -250, -47)
 
   local card = at(W_.Card(page, W, CARD_H), page, 0, -82)
   local heads = {
@@ -345,11 +352,25 @@ function BoardTab.Refresh()
   if not ui.rows or not ns.board then return end
   local today = ns.Today()
   local online = ns.Comm.Online()
-  local list = ns.Board.top(ns.board, today, period, onlineOnly and online or nil)
+  local inGuild = IsInGuild and IsInGuild() or demo
+  ui.guild:SetEnabled(inGuild and true or false)
+  local g = inGuild and 1 or 0.5
+  ui.guild.label:SetTextColor(g, g, g)
+  if not inGuild then guildOnly = false end
+  local keep = nil
+  if onlineOnly or guildOnly then
+    keep = {}
+    local guild = guildOnly and ns.Comm.Guild()
+    for p in pairs(onlineOnly and online or guild) do
+      if not guild or guild[p] then keep[p] = true end
+    end
+  end
+  local list = ns.Board.top(ns.board, today, period, keep)
   if demo then list, online = demoList() end
   local me = ns.Comm.Me()
   ui.period:Select(period)
   ui.online:SetChecked(onlineOnly)
+  ui.guild:SetChecked(guildOnly)
 
   local count = 0
   for _ in pairs(online) do count = count + 1 end
@@ -374,7 +395,9 @@ function BoardTab.Refresh()
 
   local st = ns.Comm.status
   ui.empty:SetShown(#list == 0)
-  ui.empty:SetText(onlineOnly and "Nobody online has a streak above x10 in this period yet."
+  local who = (onlineOnly and guildOnly) and "No guildmate online" or (guildOnly and "No guildmate")
+    or (onlineOnly and "Nobody online")
+  ui.empty:SetText(who and (who .. " has a streak above x10 in this period yet.")
     or "No streaks yet. Streaks above x10 show up here: yours, and everyone's on your realm who runs Jumpers.")
   ui.classic:SetShown(ns.Comm.Fallback())
   ui.classic:SetText((st.channelState == "off" and "Classic clients" or "This client")

@@ -30,6 +30,7 @@ local channelId = 0
 local me, myClass
 local heard = {}               -- player -> last heard (server time)
 local via = {}                 -- player -> chat type we last heard them on
+local roster = {}              -- player -> true for everyone in our guild roster
 local asked = {}               -- player -> GetTime() we last whispered them a sync request
 local answeredTo = {}          -- player -> GetTime() we last answered them by whisper
 local whispered = {}           -- whisper target -> GetTime(), to hide "player not found" replies
@@ -96,6 +97,34 @@ end
 
 function Comm.Online()
   local set = Board.online(heard, now())
+  if me then set[me] = true end
+  return set
+end
+
+local function readRoster()
+  roster = {}
+  if not (IsInGuild and IsInGuild()) or not GetNumGuildMembers or not GetGuildRosterInfo then return end
+  local ok, n = pcall(GetNumGuildMembers)
+  for i = 1, ok and tonumber(n) or 0 do
+    local p = full((GetGuildRosterInfo(i)))
+    if p then roster[p] = true end
+  end
+end
+
+-- Asks the server for a fresh guild roster; GUILD_ROSTER_UPDATE brings it.
+function Comm.RequestRoster()
+  local ask = (C_GuildInfo and C_GuildInfo.GuildRoster) or GuildRoster
+  if ask and IsInGuild and IsInGuild() then pcall(ask) end
+end
+
+-- Our guildmates (and us): the roster, plus anyone heard on guild chat before the roster loads.
+function Comm.Guild()
+  local set = {}
+  if not (IsInGuild and IsInGuild()) then return set end
+  for p in pairs(roster) do set[p] = true end
+  for p, chat in pairs(via) do
+    if chat == "GUILD" then set[p] = true end
+  end
   if me then set[me] = true end
   return set
 end
@@ -415,9 +444,13 @@ function Comm.Init()
   local events = CreateFrame("Frame")
   events:RegisterEvent("CHAT_MSG_ADDON")
   events:RegisterEvent("PLAYER_GUILD_UPDATE")
+  events:RegisterEvent("GUILD_ROSTER_UPDATE")
   events:SetScript("OnEvent", function(_, event, ...)
     if event == "CHAT_MSG_ADDON" then
       onMessage(...)
+    elseif event == "GUILD_ROSTER_UPDATE" then
+      readRoster()
+      ns.Fire("BOARD")
     else
       status.guild = IsInGuild and IsInGuild() or false
     end
@@ -427,6 +460,7 @@ function Comm.Init()
 
   C_Timer.NewTicker(PACE, pump)
   C_Timer.After(8, function()
+    Comm.RequestRoster()
     probeChannel()
     heartbeat()
     sync(true)

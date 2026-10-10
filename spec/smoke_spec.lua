@@ -193,6 +193,23 @@ describe("addon on a mocked client", function()
       if f._text == "Copy link" or fs == "Copy link" then copy = f end
       if (f._text == "Tell a friend" or fs == "Tell a friend") and f:IsVisible() then tell = f end
     end
+    -- guildmates only: Ann is in the roster (below the top 50 otherwise), Bob is not
+    local guildCheck
+    for _, f in ipairs(Mock.frames) do
+      if f.label and f.label._text == "Guildmates only" then guildCheck = f end
+    end
+    guildCheck:SetChecked(true)
+    guildCheck:Click()
+    local function shown(name)
+      for _, f in ipairs(Mock.frames) do
+        if type(f._text) == "string" and f._text:find("^" .. name) and f:IsVisible() then return true end
+      end
+      return false
+    end
+    assert.is_true(shown("Ann")); assert.is_false(shown("Bob")); assert.is_true(shown("Tester"))
+    guildCheck:SetChecked(false)
+    guildCheck:Click()
+    assert.is_false(shown("Ann"))
     copy:Click()
     tell:Click()
     assert.truthy(Mock.chat:find("curseforge.com/wow/addons/jumpers", 1, true))

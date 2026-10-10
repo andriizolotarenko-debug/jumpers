@@ -77,11 +77,11 @@ function Board.relays(store, rec)
 end
 
 -- Best record per player within the last `days` realm days, sorted by length, then earlier.
--- online: optional set of players to keep.
-function Board.top(store, today, days, online)
+-- keep: optional set of players to keep (online, guildmates).
+function Board.top(store, today, days, keep)
   local best = {}
   for _, r in pairs(store.records) do
-    if r.d > today - days and r.d <= today and (not online or online[r.p]) then
+    if r.d > today - days and r.d <= today and (not keep or keep[r.p]) then
       local b = best[r.p]
       if not b or r.n > b.n or (r.n == b.n and r.e < b.e) then best[r.p] = r end
     end

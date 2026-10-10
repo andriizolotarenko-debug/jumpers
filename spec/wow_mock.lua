@@ -153,6 +153,10 @@ local function install()
   _G.GetNormalizedRealmName = function() return "TestRealm" end
   _G.GetRealmName = function() return "Test Realm" end
   _G.IsInGuild = function() return true end
+  Mock.roster = Mock.roster or { "Tester-TestRealm", "Ann-TestRealm" }
+  _G.GetNumGuildMembers = function() return #Mock.roster end
+  _G.GetGuildRosterInfo = function(i) return Mock.roster[i] end
+  _G.C_GuildInfo = { GuildRoster = function() Mock.fire("GUILD_ROSTER_UPDATE") end }
   _G.GetChannelName = function() return Mock.joined and 5 or 0 end
   _G.JoinTemporaryChannel = function() Mock.joined = true end
   _G.LeaveChannelByName = function() Mock.joined = false end
