@@ -110,7 +110,7 @@ describe("addon on a mocked client", function()
     assert.equal(ns.session.jumps, ns.char.bestSession)
     local texts = {}
     for _, f in ipairs(Mock.frames) do if f._text and f:IsVisible() then texts[f._text] = true end end
-    assert.is_true(texts["THIS SESSION"] and texts["ACTIVITY"] and texts[ns.session.jumps .. ""] or false)
+    assert.is_true(texts["This session"] and texts["Activity"] and texts[ns.session.jumps .. ""] or false)
     Mock.advance(4)
     ns.Window.Toggle()
   end)

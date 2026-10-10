@@ -93,6 +93,51 @@ function Window.Card(parent, w, h)
   return c
 end
 
+-- A title plate across the top of a card: warm band, gold lines, a gem at each end.
+Window.BANNER_H = 24
+function Window.Banner(card, text)
+  local b = CreateFrame("Frame", nil, card)
+  b:SetPoint("TOPLEFT", card, "TOPLEFT", 4, -4)
+  b:SetPoint("TOPRIGHT", card, "TOPRIGHT", -4, -4)
+  b:SetHeight(Window.BANNER_H)
+  local band = b:CreateTexture(nil, "BACKGROUND", nil, 1)
+  band:SetAllPoints()
+  band:SetColorTexture(1, 1, 1, 1)
+  local ok = CreateColor and band.SetGradient and pcall(band.SetGradient, band, "VERTICAL",
+    CreateColor(0.16, 0.11, 0.07, 0.95), CreateColor(0.34, 0.25, 0.15, 0.95))
+  if not ok then band:SetColorTexture(0.25, 0.18, 0.11, 0.95) end
+  for i, point in ipairs({ "TOP", "BOTTOM" }) do
+    local l = b:CreateTexture(nil, "BORDER")
+    l:SetTexture(ns.MEDIA .. "line")
+    l:SetVertexColor(0.95, 0.78, 0.36, i == 1 and 0.9 or 0.6)
+    l:SetHeight(2)
+    l:SetPoint(point .. "LEFT", b, point .. "LEFT", 0, 0)
+    l:SetPoint(point .. "RIGHT", b, point .. "RIGHT", 0, 0)
+  end
+  for _, side in ipairs({ "LEFT", "RIGHT" }) do
+    local g = b:CreateTexture(nil, "ARTWORK")
+    g:SetTexture(ns.MEDIA .. "gem_rhombus")
+    g:SetVertexColor(1, 0.8, 0.4)
+    g:SetSize(14, 14)
+    g:SetPoint("CENTER", b, side, side == "LEFT" and 12 or -12, 0)
+  end
+  b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  b.text:SetPoint("CENTER", 0, 0)
+  b.text:SetTextColor(1, 0.94, 0.82)
+  b.text:SetText(text)
+  return b
+end
+
+-- A row background inside a card: every other row gets a faint warm stripe.
+function Window.Stripe(card, y, h, i)
+  local t = card:CreateTexture(nil, "BACKGROUND", nil, 1)
+  t:SetPoint("TOPLEFT", card, "TOPLEFT", 4, y)
+  t:SetPoint("TOPRIGHT", card, "TOPRIGHT", -4, y)
+  t:SetHeight(h)
+  t:SetColorTexture(1, 0.85, 0.6, i % 2 == 1 and 0.07 or 0.02)
+  return t
+end
+
 -- A gold section title with a hairline under it.
 function Window.Section(parent, text, width)
   local fs = parent:CreateFontString(nil, "ARTWORK", "GameFontNormal")

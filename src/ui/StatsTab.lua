@@ -71,18 +71,18 @@ end
 
 local function buildHeight(c)
   local W_ = ns.Window
-  local card = at(W_.Card(c, W, 150), c, 0, -48)
-  at(W_.Caps(card, "Height climbed"), card, 16, -14)
-  ui.height = at(W_.Number(card, 40), card, 14, -30)
+  local card = at(W_.Card(c, W, 162), c, 0, -48)
+  W_.Banner(card, "Height climbed")
+  ui.height = at(W_.Number(card, 40), card, 14, -40)
   ui.height:SetTextColor(1, 1, 1)
   ui.heightSub = W_.Note(card)
-  ui.heightSub:SetPoint("BOTTOMRIGHT", card, "TOPRIGHT", -16, -66)
+  ui.heightSub:SetPoint("BOTTOMRIGHT", card, "TOPRIGHT", -16, -78)
 
-  ui.from = at(card:CreateFontString(nil, "ARTWORK", "GameFontHighlight"), card, 16, -80)
+  ui.from = at(card:CreateFontString(nil, "ARTWORK", "GameFontHighlight"), card, 16, -92)
   ui.to = card:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-  ui.to:SetPoint("TOPRIGHT", card, "TOPRIGHT", -16, -80)
+  ui.to:SetPoint("TOPRIGHT", card, "TOPRIGHT", -16, -92)
 
-  local track = at(CreateFrame("Frame", nil, card), card, 16, -98)
+  local track = at(CreateFrame("Frame", nil, card), card, 16, -110)
   track:SetSize(W - 32, 12)
   local tbg = track:CreateTexture(nil, "BACKGROUND")
   tbg:SetAllPoints()
@@ -100,31 +100,40 @@ local function buildHeight(c)
   if not ok then bar:SetStatusBarColor(0.95, 0.72, 0.2) end
   ui.bar = bar
 
-  ui.fromM = at(W_.Note(card), card, 16, -116)
+  ui.fromM = at(W_.Note(card), card, 16, -128)
   ui.toM = W_.Note(card)
-  ui.toM:SetPoint("TOPRIGHT", card, "TOPRIGHT", -16, -116)
-  ui.progress = at(W_.Note(card), card, 16, -132)
+  ui.toM:SetPoint("TOPRIGHT", card, "TOPRIGHT", -16, -128)
+  ui.progress = at(W_.Note(card), card, 16, -144)
 end
 
--- A card with two value columns and three labelled rows; returns the value cells [row][col].
-local function grid(card, cw, heads, rows)
+local CARD_H = 140
+local ROW_H = 26
+
+-- A gold label on a striped row of a card.
+local function rowLabel(card, name, y, h, i)
+  ns.Window.Stripe(card, y, h, i)
+  local label = card:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+  label:SetPoint("LEFT", card, "TOPLEFT", 14, y - h / 2)
+  label:SetText(name)
+  return label
+end
+
+-- A titled card with two value columns and striped rows; returns the value cells [row][col].
+local function grid(card, cw, title, heads, rows)
   local W_ = ns.Window
-  local cols = { 180, cw - 16 }
-  for i, name in ipairs(heads) do right(W_.Caps(card, name), card, cols[i], -14) end
+  W_.Banner(card, title)
+  local cols = { 190, cw - 14 }
+  for i, name in ipairs(heads) do right(W_.Caps(card, name), card, cols[i], -34) end
   local cells = {}
   for r, name in ipairs(rows) do
-    local y = -34 - (r - 1) * 34
-    local sep = card:CreateTexture(nil, "ARTWORK")
-    sep:SetColorTexture(0.55, 0.45, 0.28, 0.2)
-    sep:SetHeight(1)
-    sep:SetPoint("TOPLEFT", card, "TOPLEFT", 12, y)
-    sep:SetPoint("TOPRIGHT", card, "TOPRIGHT", -12, y)
-    local label = at(card:CreateFontString(nil, "ARTWORK", "GameFontHighlight"), card, 16, y - 10)
-    label:SetText(name)
-    label:SetTextColor(0.8, 0.78, 0.74)
+    local y = -48 - (r - 1) * ROW_H
+    rowLabel(card, name, y, ROW_H, r)
     cells[r] = {}
     for i = 1, 2 do
-      cells[r][i] = right(W_.Number(card, 18), card, cols[i], y - 8)
+      local v = W_.Number(card, 17)
+      v:SetPoint("RIGHT", card, "TOPLEFT", cols[i], y - ROW_H / 2)
+      v:SetTextColor(1, 1, 1)
+      cells[r][i] = v
     end
   end
   return cells
@@ -133,17 +142,17 @@ end
 local function buildTotals(c)
   local W_ = ns.Window
   local cw = (W - 12) / 2
-  local card = at(W_.Card(c, cw, 142), c, 0, -210)
-  ui.totals = grid(card, cw, { "Today", "All time" }, { "Jumps", "Floors", "Streaks" })
+  local card = at(W_.Card(c, cw, CARD_H), c, 0, -222)
+  ui.totals = grid(card, cw, "Totals", { "Today", "All time" }, { "Jumps", "Floors", "Streaks" })
 
-  local best = at(W_.Card(c, cw, 142), c, cw + 12, -210)
-  at(W_.Caps(best, "Best streak"), best, 16, -14)
+  local best = at(W_.Card(c, cw, CARD_H), c, cw + 12, -222)
+  W_.Banner(best, "Best streak")
   ui.best = {}
   local cell = (cw - 32) / 3
   for i, name in ipairs({ "Today", "7 days", "30 days", "Year", "All time" }) do
     local col, row = (i - 1) % 3, math.floor((i - 1) / 3)
-    local x, y = 16 + col * cell, -36 - row * 52
-    at(ns.Window.Note(best, name), best, x, y)
+    local x, y = 16 + col * cell, -38 - row * 50
+    at(ns.Window.Note(best, name), best, x, y):SetTextColor(1, 0.82, 0)
     ui.best[i] = at(W_.Number(best, 22), best, x - 1, y - 14)
   end
 end
@@ -151,26 +160,25 @@ end
 local function buildSession(c)
   local W_ = ns.Window
   local cw = (W - 12) / 2
-  local card = at(W_.Card(c, cw, 142), c, 0, -364)
-  at(W_.Caps(card, "This session"), card, 16, -14)
+  local card = at(W_.Card(c, cw, CARD_H), c, 0, -374)
+  W_.Banner(card, "This session")
   ui.session = {}
   for r, name in ipairs({ "Jumps", "Time online", "Rate", "Last 5 min", "Best session" }) do
-    local y = -36 - (r - 1) * 20
-    local label = at(card:CreateFontString(nil, "ARTWORK", "GameFontHighlight"), card, 16, y)
-    label:SetText(name)
-    label:SetTextColor(0.8, 0.78, 0.74)
-    ui.session[r] = right(card:CreateFontString(nil, "ARTWORK", "GameFontHighlight"), card, cw - 16, y)
-    ui.session[r]:SetTextColor(1, 1, 1)
+    local y = -32 - (r - 1) * 21
+    rowLabel(card, name, y, 21, r)
+    local v = card:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    v:SetPoint("RIGHT", card, "TOPLEFT", cw - 14, y - 10.5)
+    v:SetTextColor(1, 1, 1)
+    ui.session[r] = v
   end
 
-  local act = at(W_.Card(c, cw, 142), c, cw + 12, -364)
-  ui.activity = grid(act, cw, { "Session", "All time" }, { "Jumping", "Idle", "Time jumping" })
-  at(W_.Caps(act, "Activity"), act, 16, -14)
+  local act = at(W_.Card(c, cw, CARD_H), c, cw + 12, -374)
+  ui.activity = grid(act, cw, "Activity", { "Session", "All time" }, { "Jumping", "Idle", "Time jumping" })
 end
 
 local function buildMilestones(c)
   local W_ = ns.Window
-  local card = at(W_.Card(c, W, 30), c, 0, -518)
+  local card = at(W_.Card(c, W, 30), c, 0, -526)
   local toggle = CreateFrame("Button", nil, card)
   toggle:SetAllPoints()
   toggle:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
@@ -188,7 +196,7 @@ local function buildMilestones(c)
 
   ui.rows = {}
   for i = 1, #ns.Landmarks do
-    local row = at(CreateFrame("Frame", nil, c), c, 0, -554 - (i - 1) * ROW)
+    local row = at(CreateFrame("Frame", nil, c), c, 0, -562 - (i - 1) * ROW)
     row:SetSize(W, ROW)
     row.hl = row:CreateTexture(nil, "BACKGROUND")
     row.hl:SetAllPoints()
@@ -363,6 +371,6 @@ function StatsTab.Refresh()
       row.hl:SetShown(i == k + 1)
     end
   end
-  ui.content:SetHeight(listOpen and (554 + #L * ROW + 8) or 550)
+  ui.content:SetHeight(listOpen and (562 + #L * ROW + 8) or 558)
   if not listOpen and ui.scroll then ui.scroll:SetVerticalScroll(0) end
 end
