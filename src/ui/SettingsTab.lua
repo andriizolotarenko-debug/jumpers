@@ -5,6 +5,7 @@ local SettingsTab = {}
 ns.SettingsTab = SettingsTab
 
 local W = 600          -- page width
+local CW = (W - 12) / 2           -- half-width card
 local PREVIEW_W = 250
 local LEFT = W - PREVIEW_W - 24   -- width of the left column next to the preview
 
@@ -58,10 +59,10 @@ local function at(region, page, x, y)
   return region
 end
 
--- Slider row: label on the left; stepper, slider, stepper, value on the right of `rightEdge`.
+-- Slider row: gold label on the left; stepper, slider, stepper, value on the right of `rightEdge`.
 local function sliderRow(page, label, y, rightEdge, min, max, step, onChange)
   local W_ = ns.Window
-  at(W_.Text(page, "GameFontHighlight", label), page, 2, y - 4)
+  at(W_.Text(page, "GameFontNormal", label), page, 14, y - 4)
   local value = W_.Text(page, "GameFontHighlight")
   value:SetPoint("TOPRIGHT", page, "TOPLEFT", rightEdge, y - 4)
   value:SetJustifyH("RIGHT")
@@ -81,33 +82,29 @@ function SettingsTab.Build(page)
   local W_ = ns.Window
   local S = ns.Settings
 
-  -- combo counter
-  at(W_.Section(page, "Combo counter", W), page, 0, 0)
-  local getMeta = (C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
-  local version = getMeta and getMeta("Jumpers", "Version")
-  if type(version) ~= "string" or version:find("@", 1, true) then version = "dev" end
-  local ver = W_.Note(page, version)
-  ver:SetPoint("TOPRIGHT", page, "TOPRIGHT", 0, -2)
-  ui.show = at(W_.Check(page, "Show combo counter", function(v) S.Set("show", v) end), page, -2, -22)
+  -- combo counter: options on the left, the live preview on the right
+  local combo = at(W_.Card(page, W, 210), page, 0, 0)
+  W_.Banner(combo, "Combo counter")
+  ui.show = at(W_.Check(combo, "Show combo counter", function(v) S.Set("show", v) end), combo, 10, -34)
 
-  ui.size, ui.sizeValue = sliderRow(page, "Size", -56, LEFT, 50, 200, 5, function(v)
+  ui.size, ui.sizeValue = sliderRow(combo, "Size", -66, LEFT, 50, 200, 5, function(v)
     S.Set("size", v)
     return v .. "%"
   end)
 
-  ui.unlock = at(W_.Check(page, "Unlock position", function(v) S.Set("unlocked", v) end), page, -2, -86)
-  local reset = W_.Button(page, "Reset", 72, function() S.Set("pos", nil) end)
-  reset:SetPoint("TOPRIGHT", page, "TOPLEFT", LEFT, -88)
-  at(W_.Note(page, "While unlocked, drag the counter to move it."), page, 2, -112)
+  ui.unlock = at(W_.Check(combo, "Unlock position", function(v) S.Set("unlocked", v) end), combo, 10, -96)
+  local reset = W_.Button(combo, "Reset", 72, function() S.Set("pos", nil) end)
+  reset:SetPoint("TOPRIGHT", combo, "TOPLEFT", LEFT, -98)
+  at(W_.Note(combo, "While unlocked, drag the counter to move it."), combo, 14, -122)
 
-  ui.reduced = at(W_.Check(page, "Reduced effects", function(v) S.Set("reduced", v) end), page, -2, -130)
-  ui.plain = at(W_.Check(page, "Number only", function(v) S.Set("plain", v) end), page, 168, -130)
-  ui.effectsNote = at(W_.Note(page, REDUCED_NOTE), page, 2, -156)
+  ui.reduced = at(W_.Check(combo, "Reduced effects", function(v) S.Set("reduced", v) end), combo, 10, -140)
+  ui.plain = at(W_.Check(combo, "Number only", function(v) S.Set("plain", v) end), combo, 180, -140)
+  ui.effectsNote = at(W_.Note(combo, REDUCED_NOTE), combo, 14, -166)
+  ui.effectsNote:SetWidth(LEFT - 14)
 
-  -- preview
-  local box = CreateFrame("Frame", nil, page)
-  box:SetSize(PREVIEW_W, 150)
-  box:SetPoint("TOPRIGHT", page, "TOPRIGHT", 0, -24)
+  local box = CreateFrame("Frame", nil, combo)
+  box:SetSize(PREVIEW_W, 140)
+  box:SetPoint("TOPRIGHT", combo, "TOPRIGHT", -12, -34)
   box:SetClipsChildren(true)
   local bg = box:CreateTexture(nil, "BACKGROUND")
   bg:SetAllPoints()
@@ -123,46 +120,55 @@ function SettingsTab.Build(page)
   ui.fancyPreview.root:SetPoint("CENTER", box, "CENTER", 0, -4)
   ui.plainPreview = ns.PlainCounter.New(box)
   ui.plainPreview.root:SetPoint("CENTER", box, "CENTER", 0, -4)
-  local play = W_.Button(page, "Play sample streak", PREVIEW_W, playSample)
+  local play = W_.Button(combo, "Play sample streak", PREVIEW_W, playSample)
   play:SetPoint("TOP", box, "BOTTOM", 0, -6)
 
   -- sound
-  at(W_.Section(page, "Sound", W), page, 0, -200)
-  ui.volume, ui.volValue = sliderRow(page, "Volume", -222, W, 0, 100, 25, function(v)
+  local sound = at(W_.Card(page, W, 66), page, 0, -218)
+  W_.Banner(sound, "Sound")
+  ui.volume, ui.volValue = sliderRow(sound, "Volume", -38, W - 12, 0, 100, 25, function(v)
     S.Set("volume", v)
     if v > 0 then ns.PlaySound("milestone") end
     return volumeText(v)
   end)
 
-  -- units
-  at(W_.Section(page, "Units", W), page, 0, -262)
-  at(W_.Text(page, "GameFontHighlight", "Height"), page, 2, -288)
-  ui.units = W_.Segmented(page, {
+  -- units and minimap, side by side
+  local units = at(W_.Card(page, CW, 96), page, 0, -292)
+  W_.Banner(units, "Units")
+  at(W_.Text(units, "GameFontNormal", "Height"), units, 14, -40)
+  ui.units = W_.Segmented(units, {
     { label = "Metres", value = "m" },
     { label = "Feet", value = "ft" },
   }, 70, function(v) S.Set("units", v); ui.units:Select(v) end)
-  ui.units.box:SetPoint("TOPRIGHT", page, "TOPRIGHT", 0, -284)
-  at(W_.Note(page, "Set from your region on first run (US: feet). Floors and landmarks live in Personal Stats."),
-    page, 2, -312)
+  ui.units.box:SetPoint("TOPRIGHT", units, "TOPRIGHT", -12, -34)
+  local unitsNote = at(W_.Note(units, "Set from your region on first run (US: feet). Floors and landmarks live in"
+    .. " Personal Stats."), units, 14, -64)
+  unitsNote:SetWidth(CW - 28)
 
-  -- minimap
-  at(W_.Section(page, "Minimap", W), page, 0, -340)
-  ui.minimap = at(W_.Check(page, "Show minimap button", function(v)
+  local minimap = at(W_.Card(page, CW, 96), page, CW + 12, -292)
+  W_.Banner(minimap, "Minimap")
+  ui.minimap = at(W_.Check(minimap, "Show minimap button", function(v)
     S.Get("minimap").hide = not v
     ns.Fire("SETTINGS", "minimap")
-  end), page, -2, -362)
+  end), minimap, 10, -34)
 
   -- progress
-  at(W_.Section(page, "Progress", W), page, 0, -400)
-  local resetProgress = W_.Button(page, "Reset progress", 140, function()
+  local progress = at(W_.Card(page, W, 66), page, 0, -396)
+  W_.Banner(progress, "Progress")
+  local resetProgress = W_.Button(progress, "Reset progress", 140, function()
     if StaticPopup_Show then StaticPopup_Show("JUMPERS_RESET_PROGRESS") else ns.ResetProgress() end
   end)
-  at(resetProgress, page, 0, -424)
-  local warn = W_.Note(page, "Clears jumps, streaks, bests and milestones for this character and the account.")
+  at(resetProgress, progress, 12, -36)
+  local warn = W_.Note(progress, "Clears jumps, streaks, bests and milestones for this character and the account.")
   warn:SetPoint("LEFT", resetProgress, "RIGHT", 10, 0)
 
   at(W_.Note(page, "Open this window: minimap button or |cffffd100/jumpers|r. Try |cffffd100/jumpers demo|r."),
-    page, 2, -462)
+    page, 2, -472)
+  local getMeta = (C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
+  local version = getMeta and getMeta("Jumpers", "Version")
+  if type(version) ~= "string" or version:find("@", 1, true) then version = "dev" end
+  local ver = W_.Note(page, version)
+  ver:SetPoint("TOPRIGHT", page, "TOPRIGHT", 0, -472)
 
   if StaticPopupDialogs then
     StaticPopupDialogs.JUMPERS_RESET_PROGRESS = {

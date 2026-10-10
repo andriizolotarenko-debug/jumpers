@@ -138,18 +138,6 @@ function Window.Stripe(card, y, h, i)
   return t
 end
 
--- A gold section title with a hairline under it.
-function Window.Section(parent, text, width)
-  local fs = parent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-  fs:SetText(text)
-  local line = parent:CreateTexture(nil, "ARTWORK")
-  line:SetColorTexture(0.55, 0.45, 0.28, 0.35)
-  line:SetHeight(1)
-  line:SetWidth(width)
-  line:SetPoint("TOPLEFT", fs, "BOTTOMLEFT", 0, -5)
-  return fs
-end
-
 function Window.Button(parent, text, width, onClick)
   local b = try("UIPanelButtonTemplate", "Button", nil, parent) or CreateFrame("Button", nil, parent)
   b:SetSize(width, 22)

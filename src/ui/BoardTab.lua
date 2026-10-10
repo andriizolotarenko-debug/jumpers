@@ -8,7 +8,8 @@ local W = 600
 local ROW = 26
 local MAX_ROWS = 50
 local CARD_H = 380
-local VIEW = CARD_H - 34                -- list height when your place is not pinned
+local LIST_TOP = 54                     -- banner and column heads above the list
+local VIEW = CARD_H - LIST_TOP - 4      -- list height when your place is not pinned
 local COLS = { rank = 14, player = 52, best = 420, when = W - 16 }
 local DOT = "|TInterface\\FriendsFrame\\StatusIcon-Online:10:10:0:0|t"
 local PERIODS = {
@@ -218,7 +219,7 @@ local function updatePinned()
   ui.pinned:SetShown(show)
   ui.pinSep:SetShown(show)
   ui.scroll:ClearAllPoints()
-  ui.scroll:SetPoint("TOPLEFT", ui.card, "TOPLEFT", 0, -30)
+  ui.scroll:SetPoint("TOPLEFT", ui.card, "TOPLEFT", 0, -LIST_TOP)
   ui.scroll:SetPoint("BOTTOMRIGHT", ui.card, "BOTTOMRIGHT", 0, show and (ROW + 10) or 4)
 end
 
@@ -282,7 +283,7 @@ local function buildRows(card)
   ui.rows = {}
   for i = 1, MAX_ROWS do
     local row = at(makeRow(content), content, 0, -(i - 1) * ROW)
-    row.zebra:SetColorTexture(1, 1, 1, i % 2 == 0 and 0.03 or 0)
+    row.zebra:SetColorTexture(1, 0.85, 0.6, i % 2 == 1 and 0.07 or 0.02)
     row:Hide()
     ui.rows[i] = row
   end
@@ -302,7 +303,6 @@ end
 function BoardTab.Build(page)
   local W_ = ns.Window
   ui.title = at(page:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge"), page, 2, -2)
-  ui.title:SetText("Best single streak")
   ui.sub = at(W_.Note(page), page, 2, -24)
 
   ui.period = W_.Segmented(page, PERIODS, 70, function(v) period = v; BoardTab.Refresh() end)
@@ -317,6 +317,7 @@ function BoardTab.Build(page)
   ui.guild:SetPoint("TOPRIGHT", page, "TOPRIGHT", -250, -47)
 
   local card = at(W_.Card(page, W, CARD_H), page, 0, -82)
+  W_.Banner(card, "Best single streak")
   local heads = {
     { "#", "LEFT", COLS.rank }, { "Player", "LEFT", COLS.player },
     { "Best streak", "RIGHT", COLS.best }, { "When", "RIGHT", COLS.when },
@@ -324,16 +325,16 @@ function BoardTab.Build(page)
   for _, h in ipairs(heads) do
     local fs = W_.Caps(card, h[1])
     if h[2] == "LEFT" then
-      fs:SetPoint("TOPLEFT", card, "TOPLEFT", h[3], -10)
+      fs:SetPoint("TOPLEFT", card, "TOPLEFT", h[3], -34)
     else
-      fs:SetPoint("TOPRIGHT", card, "TOPLEFT", h[3], -10)
+      fs:SetPoint("TOPRIGHT", card, "TOPLEFT", h[3], -34)
     end
   end
   local sep = card:CreateTexture(nil, "ARTWORK")
   sep:SetColorTexture(0.55, 0.45, 0.28, 0.35)
   sep:SetHeight(1)
-  sep:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -26)
-  sep:SetPoint("TOPRIGHT", card, "TOPRIGHT", -10, -26)
+  sep:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -LIST_TOP + 4)
+  sep:SetPoint("TOPRIGHT", card, "TOPRIGHT", -10, -LIST_TOP + 4)
   buildRows(card)
 
   ui.foot = at(W_.Note(page), page, 2, -470)
@@ -375,7 +376,8 @@ function BoardTab.Refresh()
   local count = 0
   for _ in pairs(online) do count = count + 1 end
   local realm = GetRealmName and GetRealmName() or ""
-  ui.sub:SetText(string.format("%s \194\183 %d with Jumpers online", realm, count))
+  ui.title:SetText(realm ~= "" and realm or "Leaderboard")
+  ui.sub:SetText(string.format("%d with Jumpers online", count))
 
   local myRank, myRec
   for i, r in ipairs(list) do

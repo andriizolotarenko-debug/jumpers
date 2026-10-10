@@ -235,6 +235,9 @@ setting picks one (the slider moves in 25 % steps):
   - Three tabs at the bottom: **Personal Stats**, **Leaderboard**, **Settings**. Our own
     buttons, together as wide as the window (same look on every client); the selected one
     has a gold edge, a warm glow and white text.
+- **Card style** (all three tabs): every card has a title banner across its top (warm
+  bronze band, gold lines from `line`, a `gem_rhombus` at each end, cream title). Table
+  rows have warm stripes and gold labels, values in white. No new textures.
 - **Personal Stats:**
   - A **Character / Account** toggle, and a **Tell a friend** button beside it that fills
     the chat box with your height, best streak and the CurseForge link (you press Enter).
@@ -252,7 +255,8 @@ setting picks one (the slider moves in 25 % steps):
   - **All milestones:** a collapsible list showing passed ✓, next highlighted and the
     rest dimmed.
 - **Leaderboard:**
-  - Title "Best single streak", the realm and how many players with Jumpers are online.
+  - The realm as the page title and how many players with Jumpers are online; the card's
+    banner reads "Best single streak".
   - Period switch Today / 7 days / 30 days / Year, and "Guildmates only" and "Players
     online" checkboxes that work together. Guildmates come from the guild roster (plus
     anyone heard on guild chat); the guild box is greyed out when you have no guild.
@@ -274,15 +278,16 @@ setting picks one (the slider moves in 25 % steps):
   - A footer saying how records are shared (guild, channel, group, players you've met) and that
     relayed records stay hidden until two players confirm them.
 - **Settings** (R6.3):
-  - The addon version, small and grey, in the top right corner.
-  - Counter group (show, size slider with steppers, unlock + reset, reduced effects, and
+  - Cards: Combo counter, Sound, Units and Minimap side by side, Progress.
+  - The addon version, small and grey, in the bottom right corner.
+  - Combo counter card (show, size slider with steppers, unlock + reset, reduced effects, and
     "Number only": just xN in white, no ribbon, animations, effects or captions),
     with a live preview of the counter beside it and a "Play sample streak" button.
   - Sound volume slider ("Off" at 0%).
   - Progress: a "Reset progress" button (with a confirmation) that clears character and
     account stats. Meant for testing.
-  - Metres / Feet toggle.
-  - Minimap button checkbox.
+  - Units: Metres / Feet toggle.
+  - Minimap: button checkbox.
 - **Minimap button:**
   - The addon icon, via LibDataBroker + LibDBIcon.
   - Tooltip: "Jumpers", "Best streak today: xN", "Click open · Drag move".
