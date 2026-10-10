@@ -17,11 +17,6 @@ local function stats()
   return scope == "account" and ns.account or ns.char
 end
 
-local function tierColor(n)
-  if not n or n <= 0 then return { 0.45, 0.45, 0.45 } end
-  return ns.Tiers.look(n).glow
-end
-
 local function at(region, parent, x, y)
   region:ClearAllPoints()
   region:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
@@ -340,20 +335,8 @@ function StatsTab.Refresh()
   }
   for i = 1, 5 do
     local n = bests[i]
-    if n >= 1000 then
-      -- rainbow tier: one hue per character
-      local text, str = "", "x" .. n
-      for j = 1, #str do
-        local c = ns.Tiers.hsv((j - 1) / #str, 0.6, 1)
-        text = text .. string.format("|cff%02x%02x%02x%s|r", c[1] * 255, c[2] * 255, c[3] * 255, str:sub(j, j))
-      end
-      ui.best[i]:SetText(text)
-      ui.best[i]:SetTextColor(1, 1, 1)
-    else
-      local c = tierColor(n)
-      ui.best[i]:SetText(n > 0 and ("x" .. n) or "-")
-      ui.best[i]:SetTextColor(c[1], c[2], c[3])
-    end
+    ui.best[i]:SetText(n > 0 and ("x" .. n) or "-")
+    if n > 0 then ui.best[i]:SetTextColor(1, 1, 1) else ui.best[i]:SetTextColor(0.45, 0.45, 0.45) end
   end
 
   if ui.arrow.SetRotation then ui.arrow:SetRotation(listOpen and -math.pi / 2 or 0) end

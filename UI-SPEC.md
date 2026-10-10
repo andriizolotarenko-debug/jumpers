@@ -242,7 +242,7 @@ setting picks one (the slider moves in 25 % steps):
   - A progress bar from the last landmark passed (with ✓) to the next one, with
     "Milestone k of 55 · p% there · N jumps to go".
   - **Totals:** a table with Today and All time columns. Rows: Jumps, Floors, Streaks.
-  - **Best streak:** Today, 7 days, 30 days, Year, All time, each coloured by its tier.
+  - **Best streak:** Today, 7 days, 30 days, Year, All time, in plain white (grey "-" when none).
   - **This session** (since login, the same in both scopes): Jumps, Time online, Rate
     (per minute and per hour), Last 5 min (per minute), and Best session (most jumps in
     one login, per scope).
