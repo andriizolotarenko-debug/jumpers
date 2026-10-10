@@ -1,6 +1,6 @@
 ## Interface: 120100, 11509, 20506, 16001
 ## Title: Jumpers
-## Notes: Chain moving jumps into streaks, watch the combo counter grow and climb all the way to the Moon.
+## Notes: Jump-streak challenge: chain jumps into combos, beat your record and race your realm on the leaderboard.
 ## Author: Andrii Zolotarenko
 ## Version: @project-version@
 ## SavedVariables: JumpersDB

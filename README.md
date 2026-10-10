@@ -1,11 +1,10 @@
 # Jumpers
 
-A World of Warcraft: Forever addon that turns travel into a game: chain your jumps into
-streaks, watch the combo counter grow, see how high you would have climbed, and compete
-on a shared leaderboard.
+For players who can't stop jumping. Chain your jumps into streaks, beat your own record and race
+your realm for the top of the leaderboard.
 
-Status: beta. Counter, stats and a peer-to-peer leaderboard (in game testing under way). Design and plan: [REQUIREMENTS.md](REQUIREMENTS.md),
-[UI-SPEC.md](UI-SPEC.md), [ARCHITECTURE.md](ARCHITECTURE.md), [PLAN.md](PLAN.md).
+Design and plan: [REQUIREMENTS.md](REQUIREMENTS.md), [UI-SPEC.md](UI-SPEC.md),
+[ARCHITECTURE.md](ARCHITECTURE.md), [PLAN.md](PLAN.md).
 
 ## Install
 
