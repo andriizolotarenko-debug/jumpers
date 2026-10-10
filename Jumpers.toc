@@ -19,6 +19,7 @@ src\Streak.lua
 src\Tiers.lua
 src\Units.lua
 src\Stats.lua
+src\Session.lua
 src\Landmarks.lua
 src\net\Wire.lua
 src\net\Verify.lua

@@ -35,6 +35,22 @@ function ns.Today()
 end
 
 ns.streak = ns.Streak.new()
+ns.session = ns.Session.new(GetTime())
+
+-- Time logged in is added to the saved stats now and then, so a crash loses at most a minute.
+local onlineFrom = GetTime()
+local function flushOnline()
+  local t = GetTime()
+  local d = t - onlineFrom
+  onlineFrom = t
+  ns.Stats.addTime(ns.char, d, 0)
+  ns.Stats.addTime(ns.account, d, 0)
+end
+
+-- Seconds logged in for a stats table, including the part not yet added.
+function ns.OnlineTime(s)
+  return s.online + math.max(0, GetTime() - onlineFrom)
+end
 
 -- The streak loop runs only while a streak is active (zero cost when idle).
 local ticker
@@ -68,6 +84,11 @@ function ns.CountedJump(t)
   local before = ns.char.jumps
   ns.Stats.addJump(ns.char, today)
   ns.Stats.addJump(ns.account, today)
+  local active = ns.Session.jump(ns.session, t)
+  for _, s in ipairs({ ns.char, ns.account }) do
+    ns.Stats.addTime(s, 0, active)
+    ns.Stats.noteSession(s, ns.session.jumps)
+  end
   ns.Fire("JUMP", n)
   local idx = ns.Units.crossed(before, ns.char.jumps, ns.Landmarks)
   if idx then ns.Fire("MILESTONE", idx) end
@@ -96,12 +117,15 @@ function ns.ResetProgress()
   JumpersCharDB.stats = ns.Stats.new()
   ns.account = JumpersDB.stats
   ns.char = JumpersCharDB.stats
+  ns.session = ns.Session.new(GetTime())
+  onlineFrom = GetTime()
   ns.Fire("STATS_RESET")
 end
 
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_LOGIN")
+frame:RegisterEvent("PLAYER_LOGOUT")
 frame:SetScript("OnEvent", function(_, event, name)
   if event == "ADDON_LOADED" and name == ADDON then
     initDB()
@@ -118,6 +142,11 @@ frame:SetScript("OnEvent", function(_, event, name)
     ns.Minimap.Init()
     ns.Settings.RegisterOptionsStub()
     ns.Comm.Init()
+    ns.session = ns.Session.new(GetTime())
+    onlineFrom = GetTime()
+    C_Timer.NewTicker(60, flushOnline)
+  elseif event == "PLAYER_LOGOUT" then
+    flushOnline()
   end
 end)
 

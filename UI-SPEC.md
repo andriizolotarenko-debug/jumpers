@@ -243,11 +243,19 @@ setting picks one (the slider moves in 25 % steps):
     "Milestone k of 55 · p% there · N jumps to go".
   - **Totals:** a table with Today and All time columns. Rows: Jumps, Floors, Streaks.
   - **Best streak:** Today, 7 days, 30 days, Year, All time, each coloured by its tier.
+  - **This session** (since login, the same in both scopes): Jumps, Time online, Rate
+    (per minute and per hour), Last 5 min (per minute), and Best session (most jumps in
+    one login, per scope).
+  - **Activity:** Session and All time columns. Rows: Jumping %, Idle %, Time jumping.
+    A jump adds at most 1.5 s of jumping time (less when the next jump comes sooner).
+    All time counts from the version that added it, against time logged in with Jumpers.
   - **All milestones:** a collapsible list showing passed ✓, next highlighted and the
     rest dimmed.
 - **Leaderboard:**
   - Title "Best single streak", the realm and how many players with Jumpers are online.
-  - Period switch Today / 7 days / 30 days / Year, and a "Players online" checkbox.
+  - Period switch Today / 7 days / 30 days / Year, and "Guildmates only" and "Players
+    online" checkboxes that work together. Guildmates come from the guild roster (plus
+    anyone heard on guild chat); the guild box is greyed out when you have no guild.
   - A card with up to 50 rows: rank in Changa One (top 3 in gold, silver, bronze), player
     in class colour with a green dot when online (own realm without the suffix), the best
     streak as a small copy of the counter's ribbon (band 16 px, tails and folds, gold

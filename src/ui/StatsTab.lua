@@ -106,14 +106,13 @@ local function buildHeight(c)
   ui.progress = at(W_.Note(card), card, 16, -132)
 end
 
-local function buildTotals(c)
+-- A card with two value columns and three labelled rows; returns the value cells [row][col].
+local function grid(card, cw, heads, rows)
   local W_ = ns.Window
-  local cw = (W - 12) / 2
-  local card = at(W_.Card(c, cw, 142), c, 0, -210)
   local cols = { 180, cw - 16 }
-  for i, name in ipairs({ "Today", "All time" }) do right(W_.Caps(card, name), card, cols[i], -14) end
-  ui.totals = {}
-  for r, name in ipairs({ "Jumps", "Floors", "Streaks" }) do
+  for i, name in ipairs(heads) do right(W_.Caps(card, name), card, cols[i], -14) end
+  local cells = {}
+  for r, name in ipairs(rows) do
     local y = -34 - (r - 1) * 34
     local sep = card:CreateTexture(nil, "ARTWORK")
     sep:SetColorTexture(0.55, 0.45, 0.28, 0.2)
@@ -123,11 +122,19 @@ local function buildTotals(c)
     local label = at(card:CreateFontString(nil, "ARTWORK", "GameFontHighlight"), card, 16, y - 10)
     label:SetText(name)
     label:SetTextColor(0.8, 0.78, 0.74)
-    ui.totals[r] = {}
+    cells[r] = {}
     for i = 1, 2 do
-      ui.totals[r][i] = right(W_.Number(card, 18), card, cols[i], y - 8)
+      cells[r][i] = right(W_.Number(card, 18), card, cols[i], y - 8)
     end
   end
+  return cells
+end
+
+local function buildTotals(c)
+  local W_ = ns.Window
+  local cw = (W - 12) / 2
+  local card = at(W_.Card(c, cw, 142), c, 0, -210)
+  ui.totals = grid(card, cw, { "Today", "All time" }, { "Jumps", "Floors", "Streaks" })
 
   local best = at(W_.Card(c, cw, 142), c, cw + 12, -210)
   at(W_.Caps(best, "Best streak"), best, 16, -14)
@@ -141,9 +148,29 @@ local function buildTotals(c)
   end
 end
 
+local function buildSession(c)
+  local W_ = ns.Window
+  local cw = (W - 12) / 2
+  local card = at(W_.Card(c, cw, 142), c, 0, -364)
+  at(W_.Caps(card, "This session"), card, 16, -14)
+  ui.session = {}
+  for r, name in ipairs({ "Jumps", "Time online", "Rate", "Last 5 min", "Best session" }) do
+    local y = -36 - (r - 1) * 20
+    local label = at(card:CreateFontString(nil, "ARTWORK", "GameFontHighlight"), card, 16, y)
+    label:SetText(name)
+    label:SetTextColor(0.8, 0.78, 0.74)
+    ui.session[r] = right(card:CreateFontString(nil, "ARTWORK", "GameFontHighlight"), card, cw - 16, y)
+    ui.session[r]:SetTextColor(1, 1, 1)
+  end
+
+  local act = at(W_.Card(c, cw, 142), c, cw + 12, -364)
+  ui.activity = grid(act, cw, { "Session", "All time" }, { "Jumping", "Idle", "Time jumping" })
+  at(W_.Caps(act, "Activity"), act, 16, -14)
+end
+
 local function buildMilestones(c)
   local W_ = ns.Window
-  local card = at(W_.Card(c, W, 30), c, 0, -364)
+  local card = at(W_.Card(c, W, 30), c, 0, -518)
   local toggle = CreateFrame("Button", nil, card)
   toggle:SetAllPoints()
   toggle:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
@@ -161,7 +188,7 @@ local function buildMilestones(c)
 
   ui.rows = {}
   for i = 1, #ns.Landmarks do
-    local row = at(CreateFrame("Frame", nil, c), c, 0, -400 - (i - 1) * ROW)
+    local row = at(CreateFrame("Frame", nil, c), c, 0, -554 - (i - 1) * ROW)
     row:SetSize(W, ROW)
     row.hl = row:CreateTexture(nil, "BACKGROUND")
     row.hl:SetAllPoints()
@@ -190,13 +217,52 @@ function StatsTab.Build(page)
   buildHeader(content)
   buildHeight(content)
   buildTotals(content)
+  buildSession(content)
   buildMilestones(content)
 
   page:SetScript("OnShow", StatsTab.Refresh)
+  local acc = 0
+  page:SetScript("OnUpdate", function(_, elapsed)   -- session time and rates move on their own
+    acc = acc + elapsed
+    if acc >= 1 then acc = 0; StatsTab.Refresh() end
+  end)
   ns.On("JUMP", function() if page:IsVisible() then StatsTab.Refresh() end end)
   ns.On("STREAK_END", function() if page:IsVisible() then StatsTab.Refresh() end end)
   ns.On("SETTINGS", function(key) if key == "units" and page:IsVisible() then StatsTab.Refresh() end end)
   ns.On("STATS_RESET", function() if page:IsVisible() then StatsTab.Refresh() end end)
+end
+
+local function duration(sec)
+  sec = math.floor(sec)
+  if sec < 60 then return sec .. "s" end
+  if sec < 3600 then return string.format("%dm %02ds", math.floor(sec / 60), sec % 60) end
+  if sec < 86400 then return string.format("%dh %02dm", math.floor(sec / 3600), math.floor(sec % 3600 / 60)) end
+  return string.format("%dd %dh", math.floor(sec / 86400), math.floor(sec % 86400 / 3600))
+end
+
+local function percent(x)
+  return math.floor(x * 100 + 0.5) .. "%"
+end
+
+local function refreshSession(s, U)
+  local S, sess, t = ns.Session, ns.session, GetTime()
+  local rate = S.rate(sess, t)
+  ui.session[1]:SetText(U.int(sess.jumps))
+  ui.session[2]:SetText(duration(S.elapsed(sess, t)))
+  ui.session[3]:SetText(string.format("%.1f/min \194\183 %s/hr", rate, U.int(math.floor(rate * 60 + 0.5))))
+  ui.session[4]:SetText(string.format("%.1f/min", S.recentRate(sess, t)))
+  ui.session[5]:SetText(U.int(s.bestSession))
+
+  local shares = {
+    S.share(sess.active, S.elapsed(sess, t)),
+    S.share(s.active, ns.OnlineTime(s)),
+  }
+  local times = { sess.active, s.active }
+  for i = 1, 2 do
+    ui.activity[1][i]:SetText(percent(shares[i]))
+    ui.activity[2][i]:SetText(percent(1 - shares[i]))
+    ui.activity[3][i]:SetText(duration(times[i]))
+  end
 end
 
 local function setWho()
@@ -255,6 +321,8 @@ function StatsTab.Refresh()
     for i = 1, 2 do ui.totals[r][i]:SetText(U.int(values[r][i])) end
   end
 
+  refreshSession(s, U)
+
   local bests = {
     ns.Stats.periodBest(s, today, 1),
     ns.Stats.periodBest(s, today, 7),
@@ -295,6 +363,6 @@ function StatsTab.Refresh()
       row.hl:SetShown(i == k + 1)
     end
   end
-  ui.content:SetHeight(listOpen and (400 + #L * ROW + 8) or 396)
+  ui.content:SetHeight(listOpen and (554 + #L * ROW + 8) or 550)
   if not listOpen and ui.scroll then ui.scroll:SetVerticalScroll(0) end
 end

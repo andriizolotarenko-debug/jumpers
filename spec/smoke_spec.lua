@@ -105,6 +105,12 @@ describe("addon on a mocked client", function()
       if f._text == "Tell a friend" and f:IsVisible() then f:Click() end
     end
     assert.truthy(Mock.chat:find("^I've climbed .+ x%d+%. Can you beat it%? curseforge"))
+    -- this session: every counted jump so far, and a share of time spent jumping
+    assert.is_true(ns.session.jumps > 0)
+    assert.equal(ns.session.jumps, ns.char.bestSession)
+    local texts = {}
+    for _, f in ipairs(Mock.frames) do if f._text and f:IsVisible() then texts[f._text] = true end end
+    assert.is_true(texts["THIS SESSION"] and texts["ACTIVITY"] and texts[ns.session.jumps .. ""] or false)
     Mock.advance(4)
     ns.Window.Toggle()
   end)

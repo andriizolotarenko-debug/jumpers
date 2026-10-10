@@ -1,5 +1,6 @@
 -- PURE: today / all-time counts, per-day bests and period bests (R3.1).
--- A stats table: { jumps, streaks, best, days = { [dayNumber] = { j, s, b } } }
+-- A stats table: { jumps, streaks, best, online, active, bestSession, days = { [dayNumber] = { j, s, b } } }
+-- online / active: seconds logged in / spent jumping since Jumpers started counting them.
 local _, ns = ...
 ns = ns or {}
 
@@ -21,7 +22,7 @@ function Stats.dayNumber(y, m, d)
 end
 
 function Stats.new()
-  return { jumps = 0, streaks = 0, best = 0, days = {} }
+  return { jumps = 0, streaks = 0, best = 0, online = 0, active = 0, bestSession = 0, days = {} }
 end
 
 -- Fills in missing fields of a saved table.
@@ -30,6 +31,9 @@ function Stats.ensure(s)
   s.jumps = tonumber(s.jumps) or 0
   s.streaks = tonumber(s.streaks) or 0
   s.best = tonumber(s.best) or 0
+  s.online = tonumber(s.online) or 0
+  s.active = tonumber(s.active) or 0
+  s.bestSession = tonumber(s.bestSession) or 0
   s.days = type(s.days) == "table" and s.days or {}
   return s
 end
@@ -47,6 +51,17 @@ function Stats.addJump(s, today)
   s.jumps = s.jumps + 1
   local e = day(s, today)
   e.j = e.j + 1
+end
+
+-- Time logged in and time spent jumping, in seconds.
+function Stats.addTime(s, online, active)
+  s.online = s.online + (online or 0)
+  s.active = s.active + (active or 0)
+end
+
+-- Keeps the most jumps in one session.
+function Stats.noteSession(s, jumps)
+  if jumps > s.bestSession then s.bestSession = jumps end
 end
 
 -- Records an ended streak. Returns isNewBest, previousBest, isTodayBest, previousTodayBest.
